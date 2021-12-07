@@ -32,7 +32,7 @@ object Versions {
     val BouncyCastle = "1.63"
     val Kethereum = "0.83.4"
     val Komputing = "0.1"
-    val Grpc = "1.39.0"
+    val Grpc = "1.42.0"
     val Kotlin = "1.5.0"
 }
 
@@ -76,7 +76,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = "io.provenance.client"
-            artifactId = "pb-grpc-client"
+            artifactId = "pb-grpc-client-kotlin"
             version = "1.0.0-SNAPSHOT"
 
             from(components["java"])
