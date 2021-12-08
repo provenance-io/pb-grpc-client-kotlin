@@ -43,15 +43,15 @@ pbClient.markerClient.access(QueryAccessRequest.newBuilder().setId("marker addre
 Example: creating a `Marker`
 
 ```kotlin
+val mnemonic = "your 20 word phrase here" // todo use your own mnemonic
+val walletSigner = WalletSigner(NetworkType.TESTNET, mnemonic)
+val signers = listOf(BaseReqSigner(walletSigner))
+
 val msgAddMarkerRequest: MsgAddMarkerRequest = // Your request here
 
 val txn = TxOuterClass.TxBody.newBuilder()
     .addMessages(Any.pack(message = msgAddMarkerRequest, typeUrlPrefix = ""))
     .build()
-
-val mySigner: Signer =  // Your key signing implementation
-
-val signers = listOf(BaseReqSigner(key: mySigner))
 
 pbClient.estimateAndBroadcastTx(
     txBody = txn,
