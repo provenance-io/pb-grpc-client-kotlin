@@ -4,6 +4,23 @@
 [Provenance Blockchain Proto Docs](https://github.com/provenance-io/provenance/blob/main/docs/proto-docs.md) for
 client interface definitions.
 
+
+### Maven
+
+```xml
+<dependency>
+  <groupId>io.provenance.client</groupId>
+  <artifactId>pb-grpc-client-kotlin</artifactId>
+  <version>${version}</version>
+</dependency>
+```
+
+### Gradle
+
+```groovy
+implementation 'io.provenance.client:pb-grpc-client-kotlin:${version}'
+```
+
 ## Setup
 
 Setup the client by supplying the chain id (e.g. `pio-testnet-1`) and URI of the node to which you are connecting. The normal GRPC port is `9090`.
