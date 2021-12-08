@@ -29,6 +29,7 @@ java {
 
 object Versions {
     val ProvenanceProtos = "1.7.0-0.0.2"
+    val ProvenanceHDWallet = "0.1.9"
     val BouncyCastle = "1.63"
     val Kethereum = "0.83.4"
     val Komputing = "0.1"
@@ -45,6 +46,7 @@ dependencies {
 
     // Provenance
     implementation("io.provenance.protobuf:pb-proto-java:${Versions.ProvenanceProtos}")
+    implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
 
     // Grpc
     implementation("io.grpc:grpc-alts:${Versions.Grpc}")

@@ -17,11 +17,11 @@ Optionally configure GRPC by also passing `ChannelOpts` or a `NettyChannelBuilde
 
 Example: Set client idle timeout to 1 minute
 ```kotlin
-        val pbClient = PbClient(
-            chainId = "chain-local",
-            channelUri = URI("http://localhost:9090"),
-            opts = ChannelOpts(idleTimeout = (1L to TimeUnit.MINUTES))
-        )
+val pbClient = PbClient(
+    chainId = "chain-local",
+    channelUri = URI("http://localhost:9090"),
+    opts = ChannelOpts(idleTimeout = (1L to TimeUnit.MINUTES))
+)
 ```
 
 ## Query Usage
