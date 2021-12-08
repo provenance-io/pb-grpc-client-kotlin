@@ -7,6 +7,7 @@ import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.provenance.client.grpc.GasEstimate
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.ExecutorService
@@ -32,7 +33,6 @@ class PbClient(
 
     val channel = NettyChannelBuilder.forAddress(channelUri.host, channelUri.port)
         .apply {
-
             if (channelUri.scheme == "grpcs") {
                 useTransportSecurity()
             } else {

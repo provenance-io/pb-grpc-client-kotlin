@@ -1,4 +1,4 @@
-package io.provenance.client
+package io.provenance.client.grpc
 
 import kotlin.math.ceil
 
