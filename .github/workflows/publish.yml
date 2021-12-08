@@ -40,7 +40,7 @@ jobs:
           server-id: github
 
       - name: Build with Gradle
-        run: ./gradlew clean build --refresh-dependencies -Pversion=$VERSION
+        run: ./gradlew clean build -x test -Pversion=$VERSION
 
 #      - name: Install gpg secret key
 #        run: |
