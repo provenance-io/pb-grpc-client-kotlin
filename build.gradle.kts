@@ -1,4 +1,4 @@
-
+//import Repos.sonatypeOss
 
 buildscript {
     repositories {
@@ -14,6 +14,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     `java-library`
     `maven-publish`
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 repositories {
@@ -82,6 +83,19 @@ publishing {
             version = "1.0.0-SNAPSHOT"
 
             from(components["java"])
+        }
+    }
+}
+
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(findProject("ossrhUsername")?.toString() ?: System.getenv("OSSRH_USERNAME"))
+            password.set(findProject("ossrhPassword")?.toString() ?: System.getenv("OSSRH_PASSWORD"))
+            stagingProfileId.set("3180ca260b82a7") // prevents querying for the staging profile id, performance optimization
         }
     }
 }
