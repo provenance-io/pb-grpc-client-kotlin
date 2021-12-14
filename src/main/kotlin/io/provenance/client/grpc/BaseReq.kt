@@ -6,6 +6,7 @@ import cosmos.base.v1beta1.CoinOuterClass.Coin
 import cosmos.tx.signing.v1beta1.Signing.SignMode
 import cosmos.tx.v1beta1.TxOuterClass.*
 import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
+import io.provenance.client.grpc.GasEstimate
 
 const val DEFAULT_GAS_DENOM = "nhash"
 
