@@ -2,7 +2,6 @@ package io.provenance.client.grpc
 
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString
-import com.google.protobuf.Message
 import cosmos.auth.v1beta1.Auth
 import cosmos.base.v1beta1.CoinOuterClass.Coin
 import cosmos.crypto.secp256k1.Keys
@@ -49,7 +48,7 @@ data class BaseReq(
             .addAllSignerInfos(
                 signers.map {
                     SignerInfo.newBuilder()
-                         .setPublicKey(Any.pack(it.signer.pubKey(), ""))
+                        .setPublicKey(Any.pack(it.signer.pubKey(), ""))
                         .setModeInfo(
                             ModeInfo.newBuilder()
                                 .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))
