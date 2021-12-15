@@ -14,6 +14,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     `java-library`
     `maven-publish`
+    signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
@@ -113,6 +114,9 @@ publishing {
                 }
             }
         }
+    }
+    signing {
+        sign(publishing.publications["maven"])
     }
 }
 
