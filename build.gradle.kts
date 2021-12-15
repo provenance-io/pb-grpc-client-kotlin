@@ -85,6 +85,33 @@ publishing {
             version = "$projectVersion"
 
             from(components["java"])
+
+            pom {
+                name.set("Provenance Blockchain GRPC Kotlin Client")
+                description.set("A GRPC client for communicating with the Provenance Blockchain")
+                url.set("https://provenance.io")
+
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("vwagner")
+                        name.set("Valerie Wagner")
+                        email.set("tech@figure.com")
+                    }
+                }
+
+                scm {
+                    connection.set("git@github.com:provenance-io/pb-grpc-client-kotlin.git")
+                    developerConnection.set("git@github.com/provenance-io/pb-grpc-client-kotlin.git")
+                    url.set("https://github.com/provenance-io/pb-grpc-client-kotlin")
+                }
+            }
         }
     }
 }
