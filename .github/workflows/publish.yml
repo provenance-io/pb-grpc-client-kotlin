@@ -2,14 +2,14 @@ name: Publish
 
 on:
   workflow_dispatch:
-  release:
-    types: [created]
-  push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
+#  release:
+#    types: [created]
+#  push:
+#    branches:
+#    - main
+#  pull_request:
+#    branches:
+#    - main
 
 jobs:
   java_build:
