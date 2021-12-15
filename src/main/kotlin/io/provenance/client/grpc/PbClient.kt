@@ -7,6 +7,8 @@ import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.provenance.client.grpc.BaseReq
+import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.grpc.GasEstimate
 import java.io.Closeable
 import java.net.URI
@@ -85,9 +87,9 @@ class PbClient(
     ): BaseReq =
         signers.map {
             BaseReqSigner(
-                key = it.key,
+                signer = it.signer,
                 sequenceOffset = it.sequenceOffset,
-                account = it.account ?: this.getBaseAccount(it.key.address())
+                account = it.account ?: this.getBaseAccount(it.signer.address())
             )
         }.let {
             BaseReq(
@@ -106,7 +108,7 @@ class PbClient(
 
         return baseReq.buildSignDocBytesList(tx.authInfo.toByteString(), tx.body.toByteString())
             .mapIndexed { index, signDocBytes ->
-                baseReq.signers[index].key.sign(signDocBytes).let { ByteString.copyFrom(it) }
+                baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
             }.let {
                 tx.toBuilder().addAllSignatures(it).build()
             }.let { txFinal ->
@@ -130,7 +132,7 @@ class PbClient(
         val txBodyBytes = baseReq.body.toByteString()
 
         val txRaw = baseReq.buildSignDocBytesList(authInfoBytes, txBodyBytes).mapIndexed { index, signDocBytes ->
-            baseReq.signers[index].key.sign(signDocBytes).let { ByteString.copyFrom(it) }
+            baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
         }.let {
             TxOuterClass.TxRaw.newBuilder()
                 .setAuthInfoBytes(authInfoBytes)
