@@ -145,7 +145,7 @@ object Repos {
 
     fun RepositoryHandler.sonatypeOss(projectVersion: String): MavenArtifactRepository {
         val murl =
-            if (projectVersion == Versions.projectSnapshot) sonatype.snapshots
+            if (projectVersion == "1.0-SNAPSHOT") sonatype.snapshots
             else sonatype.releases
 
         return maven {
