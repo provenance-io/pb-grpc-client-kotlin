@@ -33,8 +33,7 @@ java {
     withJavadocJar()
 }
 
-//val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
-val projectVersion = "0.0.1"
+val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Versions {
     val ProvenanceProtos = "1.7.0-0.0.2"
