@@ -1,4 +1,6 @@
-//import Repos.sonatypeOss
+import org.gradle.api.artifacts.dsl.RepositoryHandler
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import java.net.URI
 
 buildscript {
     repositories {
@@ -27,6 +29,8 @@ repositories {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
+    withJavadocJar()
 }
 
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
@@ -129,6 +133,28 @@ nexusPublishing {
             username.set(findProject("ossrhUsername")?.toString() ?: System.getenv("OSSRH_USERNAME"))
             password.set(findProject("ossrhPassword")?.toString() ?: System.getenv("OSSRH_PASSWORD"))
             stagingProfileId.set("3180ca260b82a7") // prevents querying for the staging profile id, performance optimization
+        }
+    }
+}
+
+object Repos {
+    private object sonatype {
+        const val snapshots = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+        const val releases = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    }
+
+    fun RepositoryHandler.sonatypeOss(projectVersion: String): MavenArtifactRepository {
+        val murl =
+            if (projectVersion == Versions.projectSnapshot) sonatype.snapshots
+            else sonatype.releases
+
+        return maven {
+            name = "Sonatype"
+            url = URI.create(murl)
+            credentials {
+                username = System.getenv("OSSRH_USERNAME")
+                password = System.getenv("OSSRH_PASSWORD")
+            }
         }
     }
 }
