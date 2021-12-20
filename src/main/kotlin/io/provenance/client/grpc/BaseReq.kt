@@ -1,23 +1,25 @@
-package io.provenance.client
+package io.provenance.client.grpc
 
+import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import cosmos.auth.v1beta1.Auth
 import cosmos.base.v1beta1.CoinOuterClass.Coin
+import cosmos.crypto.secp256k1.Keys
 import cosmos.tx.signing.v1beta1.Signing.SignMode
 import cosmos.tx.v1beta1.TxOuterClass.*
 import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
-import io.provenance.client.grpc.GasEstimate
 
 const val DEFAULT_GAS_DENOM = "nhash"
 
 interface Signer {
     fun address(): String
+    fun pubKey(): Keys.PubKey
     fun sign(data: ByteArray): ByteArray
 }
 
 
 data class BaseReqSigner(
-    val key: Signer,
+    val signer: Signer,
     val sequenceOffset: Int = 0,
     val account: Auth.BaseAccount? = null
 )
@@ -46,7 +48,7 @@ data class BaseReq(
             .addAllSignerInfos(
                 signers.map {
                     SignerInfo.newBuilder()
-                        // .setPublicKey(it.pubKeyAny())
+                        .setPublicKey(Any.pack(it.signer.pubKey(), ""))
                         .setModeInfo(
                             ModeInfo.newBuilder()
                                 .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))

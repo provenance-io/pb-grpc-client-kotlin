@@ -56,4 +56,5 @@ jobs:
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-        if: github.event_name == 'release'
+          if: github.event_name == 'release'
+

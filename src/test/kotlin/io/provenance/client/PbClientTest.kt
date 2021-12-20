@@ -2,6 +2,7 @@ package io.provenance.client
 
 import cosmos.auth.v1beta1.QueryOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
+import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.wallet.NetworkType
 import io.provenance.client.wallet.WalletSigner
 import java.net.URI
@@ -15,7 +16,7 @@ class PbClientTest {
         channelUri = URI("http://localhost:9090"),
     )
 
-    @Test
+//    @Test
     fun testClientQuery() {
 
         pbClient.authClient.accounts(
