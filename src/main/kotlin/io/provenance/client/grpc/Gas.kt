@@ -1,18 +1,15 @@
 package io.provenance.client.grpc
 
+import cosmos.base.v1beta1.CoinOuterClass
 import kotlin.math.ceil
 
 private fun Double.roundUp(): Long = ceil(this).toLong()
 
-data class GasEstimate(val estimate: Long, val feeAdjustment: Double? = DEFAULT_FEE_ADJUSTMENT) {
+data class GasEstimate(val estimate: Long, val feeAdjustment: Double? = DEFAULT_FEE_ADJUSTMENT, val feeCalculated: List<CoinOuterClass.Coin> = emptyList()) {
 
     companion object {
-        private const val DEFAULT_FEE_ADJUSTMENT = 1.25
-        private const val DEFAULT_GAS_PRICE = 1905.00
+        const val DEFAULT_FEE_ADJUSTMENT = 1.25
     }
 
-    private val adjustment = feeAdjustment ?: DEFAULT_FEE_ADJUSTMENT
-
-    val limit = (estimate * adjustment).roundUp()
-    val fees = (limit * DEFAULT_GAS_PRICE).roundUp()
+    val limit = estimate
 }

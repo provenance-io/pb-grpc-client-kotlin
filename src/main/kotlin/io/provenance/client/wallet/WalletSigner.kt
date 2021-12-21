@@ -10,14 +10,14 @@ import io.provenance.hdwallet.wallet.Account
 import io.provenance.hdwallet.wallet.Wallet
 
 enum class NetworkType(
-    /**
-     * The hrp (Human Readable Prefix) of the network address
-     */
-    val prefix: String,
-    /**
-     * The HD wallet path
-     */
-    val path: String
+        /**
+         * The hrp (Human Readable Prefix) of the network address
+         */
+        val prefix: String,
+        /**
+         * The HD wallet path
+         */
+        val path: String
 ) {
     TESTNET("tp", "m/44'/1'/0'/0/0'"),
     MAINNET("pb", "m/505'/1'/0'/0/0")
@@ -32,9 +32,9 @@ class WalletSigner(networkType: NetworkType, mnemonic: String, passphrase: Strin
     override fun address(): String = account.address
 
     override fun pubKey(): Keys.PubKey =
-        Keys.PubKey.newBuilder().setKey(ByteString.copyFrom(account.keyPair.publicKey.compressed())).build()
+            Keys.PubKey.newBuilder().setKey(ByteString.copyFrom(account.keyPair.publicKey.compressed())).build()
 
     override fun sign(data: ByteArray): ByteArray = BCECSigner()
-        .sign(account.keyPair.privateKey, data.sha256())
-        .encodeAsBTC()
+            .sign(account.keyPair.privateKey, data.sha256())
+            .encodeAsBTC()
 }

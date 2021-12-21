@@ -46,6 +46,7 @@ object Versions {
 }
 
 dependencies {
+    implementation(files("./local_lib/proto-kotlin-feature_msg-based-fees-proto-0c10fdf.jar"))
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-allopen:${Versions.Kotlin}")
@@ -61,7 +62,7 @@ dependencies {
     implementation("io.grpc:grpc-netty:${Versions.Grpc}")
     implementation("io.grpc:grpc-protobuf:${Versions.Grpc}")
     implementation("io.grpc:grpc-stub:${Versions.Grpc}")
-
+    implementation("com.google.protobuf:protobuf-java:3.19.1")
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
     implementation("com.github.komputing.kethereum:bip32:${Versions.Kethereum}")
