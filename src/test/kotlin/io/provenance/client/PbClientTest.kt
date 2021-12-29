@@ -28,7 +28,7 @@ class PbClientTest {
     )
     var mapOfNodeSigners = mutableMapOf<String, WalletSigner>()
     // sample mnemonic, can be anything
-    val mnemonic = "tenant radar absurd ostrich music useless broom cup dragon depart annual charge lawsuit aware embark leader hour major venture private near inside daughter cabin" // todo use your own mnemonic
+    val mnemonic = "tenant radar absurd ostrich music useless broom cup dragon depart annual charge lawsuit aware embark leader hour major venture private near inside daughter cabin" // any mnemonic
 
     @Before
     fun before() {
