@@ -1,14 +1,22 @@
 package io.provenance.client.grpc
 
 import com.google.protobuf.ByteString
-import com.google.protobuf.Message
 import cosmos.auth.v1beta1.Auth
 import cosmos.auth.v1beta1.QueryOuterClass
+import cosmos.bank.v1beta1.Tx
+import cosmos.base.v1beta1.CoinOuterClass
+import cosmos.gov.v1beta1.Gov
 import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.provenance.client.wallet.WalletSigner
+import io.provenance.client.wallet.toAny
+import io.provenance.client.wallet.toTxBody
+import io.provenance.marker.v1.MsgAddMarkerRequest
 import io.provenance.msgfees.v1.CalculateTxFeesRequest
+import io.provenance.msgfees.v1.MsgFee
+import io.provenance.msgfees.v1.QueryAllMsgFeesRequest
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.ExecutorService
@@ -68,6 +76,7 @@ class PbClient(
     val feegrantClient = cosmos.feegrant.v1beta1.QueryGrpc.newBlockingStub(channel)
     val govClient = cosmos.gov.v1beta1.QueryGrpc.newBlockingStub(channel)
     val markerClient = io.provenance.marker.v1.QueryGrpc.newBlockingStub(channel)
+
     // msg fee client
     val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
     val metadataClient = io.provenance.metadata.v1.QueryGrpc.newBlockingStub(channel)
@@ -170,4 +179,40 @@ class PbClient(
                 }
             }
 
+    fun getAcountBalance(bech32Address: String, denom: String): CoinOuterClass.Coin =
+            bankClient.balance(
+                    cosmos.bank.v1beta1.QueryOuterClass.QueryBalanceRequest.newBuilder().setAddress(bech32Address).setDenom(denom).build()
+            ).balance
+
+    fun getAllMsgFees(): MutableList<MsgFee>? =
+            msgFeeClient.queryAllMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList
+
+    fun addMsgFeeProposal(walletSigner: WalletSigner, msgType:String): ServiceOuterClass.BroadcastTxResponse {
+        val addGovProposal = io.provenance.msgfees.v1.AddMsgFeeProposal.newBuilder().setAdditionalFee(CoinOuterClass.Coin.newBuilder()
+                .setDenom("gwei").setAmount(2000.toString()).build()).setDescription("Msg fee for Create Marker.")
+                .setMsgTypeUrl("/provenance.marker.v1.MsgAddMarkerRequest").setTitle("Vote for adding fee's to create marker")
+                .build().toAny()
+        val submitProposal = cosmos.gov.v1beta1.Tx.MsgSubmitProposal.newBuilder().setContent(addGovProposal)
+                .setProposer(walletSigner.account.address).addInitialDeposit(CoinOuterClass.Coin.newBuilder()
+                        .setAmount(15000000000.toString()).setDenom("nhash").build()).build()
+        val response = estimateAndBroadcastTx(submitProposal.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5)
+        return response
+
+    }
+
+    fun voteOnProposal(walletSigner: WalletSigner, proposalId: Long): ServiceOuterClass.BroadcastTxResponse {
+        val vote = cosmos.gov.v1beta1.Tx.MsgVote.newBuilder().setProposalId(proposalId).setVoter(walletSigner.account.address)
+                .setOption(Gov.VoteOption.VOTE_OPTION_YES).build()
+        val response = estimateAndBroadcastTx(vote.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5)
+        return response
+
+    }
+
+    fun getAllProposalsAndFilter(): Gov.Proposal? {
+        return govClient.proposals(cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest.getDefaultInstance())
+                .proposalsList.firstOrNull { it.status == Gov.ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD }
+    }
 }
+
+
+

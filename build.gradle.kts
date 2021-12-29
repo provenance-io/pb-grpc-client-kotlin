@@ -46,7 +46,7 @@ object Versions {
 }
 
 dependencies {
-    implementation(files("./local_lib/proto-kotlin-feature_msg-based-fees-proto-0c10fdf.jar"))
+    implementation(files("./local_lib/proto-kotlin-feature_msg-based-fees-proto-25a2450.jar"))
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-allopen:${Versions.Kotlin}")
