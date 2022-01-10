@@ -55,6 +55,7 @@ class PbClient(
 
     // Service clients
     val cosmosService = cosmos.tx.v1beta1.ServiceGrpc.newBlockingStub(channel)
+    val tendermintService = cosmos.base.tendermint.v1beta1.ServiceGrpc.newBlockingStub(channel)
 
     // Query clients
     val attributeClient = io.provenance.attribute.v1.QueryGrpc.newBlockingStub(channel)
@@ -78,7 +79,6 @@ class PbClient(
     val transferClient = ibc.applications.transfer.v1.QueryGrpc.newBlockingStub(channel)
     val upgradeClient = cosmos.upgrade.v1beta1.QueryGrpc.newBlockingStub(channel)
     val wasmClient = cosmwasm.wasm.v1.QueryGrpc.newBlockingStub(channel)
-
 
     fun baseRequest(
         txBody: TxBody,
