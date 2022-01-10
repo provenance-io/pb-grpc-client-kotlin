@@ -55,6 +55,7 @@ class PbClient(
 
     // Service clients
     val cosmosService = cosmos.tx.v1beta1.ServiceGrpc.newBlockingStub(channel)
+    val tendermintService = cosmos.base.tendermint.v1beta1.ServiceGrpc.newBlockingStub(channel)
 
     // Query clients
     val attributeClient = io.provenance.attribute.v1.QueryGrpc.newBlockingStub(channel)
@@ -75,7 +76,6 @@ class PbClient(
     val paramsClient = cosmos.params.v1beta1.QueryGrpc.newBlockingStub(channel)
     val slashingClient = cosmos.slashing.v1beta1.QueryGrpc.newBlockingStub(channel)
     val stakingClient = cosmos.staking.v1beta1.QueryGrpc.newBlockingStub(channel)
-    val tendermintClient = cosmos.base.tendermint.v1beta1.ServiceGrpc.newBlockingStub(channel)
     val transferClient = ibc.applications.transfer.v1.QueryGrpc.newBlockingStub(channel)
     val upgradeClient = cosmos.upgrade.v1beta1.QueryGrpc.newBlockingStub(channel)
     val wasmClient = cosmwasm.wasm.v1.QueryGrpc.newBlockingStub(channel)
