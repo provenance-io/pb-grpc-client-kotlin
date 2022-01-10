@@ -4,6 +4,7 @@
 [Provenance Blockchain Proto Docs](https://github.com/provenance-io/provenance/blob/main/docs/proto-docs.md) for
 client interface definitions.
 
+## Installation
 
 ### Maven
 
@@ -17,8 +18,20 @@ client interface definitions.
 
 ### Gradle
 
+#### Groovy
+
+In `build.gradle`:
+
 ```groovy
 implementation 'io.provenance.client:pb-grpc-client-kotlin:${version}'
+```
+
+#### Kotlin
+
+In `build.gradle.kts`:
+
+```kotlin
+implementation("io.provenance.client:pb-grpc-client-kotlin:${version}")
 ```
 
 ## Setup
@@ -54,10 +67,9 @@ Example: Querying the `marker` module for the access permissions on a marker:
 pbClient.markerClient.access(QueryAccessRequest.newBuilder().setId("marker address or denom here").build())
 ```
 
-
 ## Transaction Usage
 
-Example: creating a `Marker`
+### Example: creating a `Marker`
 
 ```kotlin
 val mnemonic = "your 20 word phrase here" // todo use your own mnemonic
