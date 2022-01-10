@@ -23,7 +23,7 @@ plugins {
 repositories {
     mavenCentral()
     // For KEthereum library
-    maven(url="https://jitpack.io")
+    maven(url = "https://jitpack.io")
 }
 
 java {
@@ -48,9 +48,11 @@ object Versions {
 dependencies {
 
     // Kotlin
-    implementation("org.jetbrains.kotlin:kotlin-allopen:${Versions.Kotlin}")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:${Versions.Kotlin}")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.Kotlin}")
+    // Pin kotlin packages together on a common version:
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:${Versions.Kotlin}"))
+    implementation("org.jetbrains.kotlin:kotlin-allopen")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Provenance
     implementation("io.provenance.protobuf:pb-proto-java:${Versions.ProvenanceProtos}")
