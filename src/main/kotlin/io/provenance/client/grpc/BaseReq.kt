@@ -35,7 +35,6 @@ data class BaseReq(
     val gasAdjustment: Double? = null,
     val feeGranter: String? = null
 ) {
-
     fun buildAuthInfo(gasEstimate: GasEstimate = GasEstimate(0)): AuthInfo =
         AuthInfo.newBuilder()
             .setFee(
