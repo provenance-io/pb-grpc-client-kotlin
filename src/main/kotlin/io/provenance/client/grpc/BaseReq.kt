@@ -17,7 +17,6 @@ interface Signer {
     fun sign(data: ByteArray): ByteArray
 }
 
-
 data class BaseReqSigner(
     val signer: Signer,
     val sequenceOffset: Int = 0,
@@ -30,7 +29,6 @@ data class BaseReq(
     val chainId: String,
     val gasAdjustment: Double? = null
 ) {
-
     fun buildAuthInfo(gasEstimate: GasEstimate = GasEstimate(0)): AuthInfo =
         AuthInfo.newBuilder()
             .setFee(
