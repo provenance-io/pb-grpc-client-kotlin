@@ -42,6 +42,7 @@ object Versions {
     val Kethereum = "0.83.4"
     val Komputing = "0.1"
     val Grpc = "1.42.0"
+    val Protobuf = "3.19.2"
     val Kotlin = "1.5.0"
 }
 
@@ -63,6 +64,9 @@ dependencies {
     implementation("io.grpc:grpc-netty:${Versions.Grpc}")
     implementation("io.grpc:grpc-protobuf:${Versions.Grpc}")
     implementation("io.grpc:grpc-stub:${Versions.Grpc}")
+
+    // Protobuf
+    implementation("com.google.protobuf:protobuf-java-util:${Versions.Protobuf}")
 
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
