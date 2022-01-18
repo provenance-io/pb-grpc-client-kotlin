@@ -11,13 +11,13 @@ buildscript {
     }
 }
 
-
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     `java-library`
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
 }
 
 repositories {
@@ -83,7 +83,6 @@ dependencies {
 
 configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
 
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -126,7 +125,6 @@ publishing {
     }
 }
 
-
 nexusPublishing {
     repositories {
         sonatype {
@@ -160,5 +158,3 @@ object Repos {
         }
     }
 }
-
-

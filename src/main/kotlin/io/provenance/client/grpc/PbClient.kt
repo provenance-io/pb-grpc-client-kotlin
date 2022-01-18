@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-
 data class ChannelOpts(
     val inboundMessageSize: Int = 40 * 1024 * 1024, // ~ 20 MB
     val idleTimeout: Pair<Long, TimeUnit> = 5L to TimeUnit.MINUTES,
@@ -31,7 +30,6 @@ class PbClient(
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
-
 
     val channel = NettyChannelBuilder.forAddress(channelUri.host, channelUri.port)
         .apply {
@@ -166,6 +164,4 @@ class PbClient(
                 else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
             }
         }
-
 }
-

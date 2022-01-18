@@ -6,8 +6,13 @@ import cosmos.auth.v1beta1.Auth
 import cosmos.base.v1beta1.CoinOuterClass.Coin
 import cosmos.crypto.secp256k1.Keys
 import cosmos.tx.signing.v1beta1.Signing.SignMode
-import cosmos.tx.v1beta1.TxOuterClass.*
+import cosmos.tx.v1beta1.TxOuterClass.AuthInfo
+import cosmos.tx.v1beta1.TxOuterClass.Fee
+import cosmos.tx.v1beta1.TxOuterClass.ModeInfo
 import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
+import cosmos.tx.v1beta1.TxOuterClass.SignDoc
+import cosmos.tx.v1beta1.TxOuterClass.SignerInfo
+import cosmos.tx.v1beta1.TxOuterClass.TxBody
 
 const val DEFAULT_GAS_DENOM = "nhash"
 
@@ -16,7 +21,6 @@ interface Signer {
     fun pubKey(): Keys.PubKey
     fun sign(data: ByteArray): ByteArray
 }
-
 
 data class BaseReqSigner(
     val signer: Signer,
