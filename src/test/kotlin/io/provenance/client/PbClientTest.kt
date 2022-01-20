@@ -6,7 +6,6 @@ import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.wallet.NetworkType
 import io.provenance.client.wallet.WalletSigner
 import java.net.URI
-import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class PbClientTest {
