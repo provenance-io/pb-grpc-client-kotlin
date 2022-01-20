@@ -29,10 +29,13 @@ class WalletSigner(networkType: NetworkType, mnemonic: String, passphrase: Strin
 
     val account: Account = wallet[networkType.path]
 
-    override fun address(): String = account.address
+    override fun address(): String = account.address.value
 
     override fun pubKey(): Keys.PubKey =
-        Keys.PubKey.newBuilder().setKey(ByteString.copyFrom(account.keyPair.publicKey.compressed())).build()
+        Keys.PubKey
+            .newBuilder()
+            .setKey(ByteString.copyFrom(account.keyPair.publicKey.compressed()))
+            .build()
 
     override fun sign(data: ByteArray): ByteArray = BCECSigner()
         .sign(account.keyPair.privateKey, data.sha256())

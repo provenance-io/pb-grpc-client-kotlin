@@ -37,12 +37,10 @@ val projectVersion = project.property("version")?.takeIf { it != "unspecified" }
 
 object Versions {
     val ProvenanceProtos = "1.7.0-0.0.2"
-    val ProvenanceHDWallet = "0.1.9"
-    val BouncyCastle = "1.63"
-    val Kethereum = "0.83.4"
-    val Komputing = "0.1"
-    val Grpc = "1.42.0"
-    val Kotlin = "1.5.0"
+    val ProvenanceHDWallet = "0.1.13"
+    val BouncyCastle = "1.70"
+    val Grpc = "1.42.2"
+    val Kotlin = "1.5.32"
 }
 
 dependencies {
@@ -66,15 +64,6 @@ dependencies {
 
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
-    implementation("com.github.komputing.kethereum:bip32:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:bip39:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:crypto:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:crypto_api:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:crypto_impl_bouncycastle:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:extensions_kotlin:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:model:${Versions.Kethereum}")
-    implementation("com.github.komputing:kbase58:${Versions.Komputing}")
-    implementation("com.github.komputing:kbip44:${Versions.Komputing}")
 
     // Test
     testImplementation("org.jetbrains.kotlin:kotlin-test")
