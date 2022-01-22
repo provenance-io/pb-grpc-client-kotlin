@@ -35,8 +35,8 @@ class PbClientTest {
         mapOfNodeSigners = getAllVotingKeys()
         val listOfMsgFees = pbClient.getAllMsgFees()?.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" || it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest"}
         if(listOfMsgFees?.size!! !=2) {
-            createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/provenance.marker.v1.MsgAddMarkerRequest")
-            createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/cosmos.bank.v1beta1.MsgSend")
+            if(listOfMsgFees.filter { it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }.isEmpty()) {createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/provenance.marker.v1.MsgAddMarkerRequest")}
+            if(listOfMsgFees.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" }.isEmpty()) {createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/cosmos.bank.v1beta1.MsgSend")}
         }
     }
 
@@ -165,6 +165,19 @@ class PbClientTest {
         assertEquals(estimatedGwei.amount.toString(), gweiConsumed.toString(), "estimate should match actual")
 
 
+    }
+
+    @Test
+    fun testCreateSmartContract() {
+        val walletSignerToWallet = WalletSigner(NetworkType.TESTNET, mnemonic)
+        val wallet = mapOfNodeSigners["node0"]!!
+
+        val result = pbClient.storeWasm(wallet)
+        assertTrue(
+                result.txResponse.code == 0,
+                "Did not succeed."
+        )
+        assertNotNull(result.txResponse.logsList.flatMap { it.eventsList }.filter { it.type == "store_code" }.get(0).attributesList.filter { it.key == "code_id" }.first().value)
     }
 
     fun getAllVotingKeys(): MutableMap<String, WalletSigner> {

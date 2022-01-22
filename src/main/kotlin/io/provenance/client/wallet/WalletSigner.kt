@@ -20,7 +20,7 @@ enum class NetworkType(
         val path: String
 ) {
     TESTNET("tp", "m/44'/1'/0'/0/0'"),
-    COSMOS_TESTNET("tp", "m/44'/118'/0'/0/0"), //cause we are now creating validators on localnet with that path ffs
+    COSMOS_TESTNET("tp", "m/44'/1'/0'/0/0"), //cause we are now creating validators on localnet with that path ffs
     MAINNET("pb", "m/505'/1'/0'/0/0")
 }
 

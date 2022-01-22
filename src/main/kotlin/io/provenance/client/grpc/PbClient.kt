@@ -18,6 +18,7 @@ import io.provenance.msgfees.v1.CalculateTxFeesRequest
 import io.provenance.msgfees.v1.MsgFee
 import io.provenance.msgfees.v1.QueryAllMsgFeesRequest
 import java.io.Closeable
+import java.io.File
 import java.net.URI
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -190,7 +191,7 @@ class PbClient(
     fun addMsgFeeProposal(walletSigner: WalletSigner, msgType:String): ServiceOuterClass.BroadcastTxResponse {
         val addGovProposal = io.provenance.msgfees.v1.AddMsgFeeProposal.newBuilder().setAdditionalFee(CoinOuterClass.Coin.newBuilder()
                 .setDenom("gwei").setAmount(2000.toString()).build()).setDescription("Msg fee for Create Marker.")
-                .setMsgTypeUrl("/provenance.marker.v1.MsgAddMarkerRequest").setTitle("Vote for adding fee's to create marker")
+                .setMsgTypeUrl(msgType).setTitle("Vote for adding fee's to create marker")
                 .build().toAny()
         val submitProposal = cosmos.gov.v1beta1.Tx.MsgSubmitProposal.newBuilder().setContent(addGovProposal)
                 .setProposer(walletSigner.account.address).addInitialDeposit(CoinOuterClass.Coin.newBuilder()
@@ -211,6 +212,15 @@ class PbClient(
     fun getAllProposalsAndFilter(): Gov.Proposal? {
         return govClient.proposals(cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest.getDefaultInstance())
                 .proposalsList.firstOrNull { it.status == Gov.ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD }
+    }
+
+    fun storeWasm(walletSigner: WalletSigner,): ServiceOuterClass.BroadcastTxResponse {
+        val wasmContract = ByteString.copyFrom(File("src/main/resources/ats_smart_contract.wasm").readBytes())
+        return estimateAndBroadcastTx(cosmwasm.wasm.v1.Tx.MsgStoreCode.newBuilder()
+                .setSender(walletSigner.address())
+                .setWasmByteCode(wasmContract)
+                .build().toAny().toTxBody(),
+                listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5, mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK)
     }
 }
 
