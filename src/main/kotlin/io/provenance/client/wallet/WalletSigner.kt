@@ -5,6 +5,7 @@ import cosmos.crypto.secp256k1.Keys
 import io.provenance.client.grpc.Signer
 import io.provenance.hdwallet.bip39.MnemonicWords
 import io.provenance.hdwallet.common.hashing.sha256
+import io.provenance.hdwallet.hrp.Hrp
 import io.provenance.hdwallet.signer.BCECSigner
 import io.provenance.hdwallet.wallet.Account
 import io.provenance.hdwallet.wallet.Wallet
@@ -19,8 +20,8 @@ enum class NetworkType(
      */
     val path: String
 ) {
-    TESTNET("tp", "m/44'/1'/0'/0/0'"),
-    MAINNET("pb", "m/505'/1'/0'/0/0")
+    TESTNET(prefix = Hrp.ProvenanceBlockchain.testnet, path = "m/44'/1'/0'/0/0'"),
+    MAINNET(prefix = Hrp.ProvenanceBlockchain.mainnet, path = "m/505'/1'/0'/0/0")
 }
 
 class WalletSigner(networkType: NetworkType, mnemonic: String, passphrase: String = "") : Signer {
