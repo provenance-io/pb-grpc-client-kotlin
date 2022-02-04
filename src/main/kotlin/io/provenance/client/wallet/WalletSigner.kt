@@ -40,4 +40,5 @@ class WalletSigner(networkType: NetworkType, mnemonic: String, passphrase: Strin
     override fun sign(data: ByteArray): ByteArray = BCECSigner()
         .sign(account.keyPair.privateKey, data.sha256())
         .encodeAsBTC()
+        .toByteArray()
 }

@@ -28,7 +28,7 @@ repositories {
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
@@ -37,7 +37,7 @@ val projectVersion = project.property("version")?.takeIf { it != "unspecified" }
 
 object Versions {
     val ProvenanceProtos = "1.7.0-0.0.2"
-    val ProvenanceHDWallet = "0.1.13"
+    val ProvenanceHDWallet = "0.1.15"
     val BouncyCastle = "1.70"
     val Grpc = "1.42.2"
     val Kotlin = "1.5.32"
