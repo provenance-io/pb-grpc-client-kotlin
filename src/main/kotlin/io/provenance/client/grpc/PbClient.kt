@@ -24,7 +24,7 @@ data class ChannelOpts(
     val executor: ExecutorService = Executors.newFixedThreadPool(8)
 )
 
-class PbClient(
+open class PbClient(
     val chainId: String,
     val channelUri: URI,
     opts: ChannelOpts = ChannelOpts(),
