@@ -23,11 +23,14 @@ enum class NetworkType(
     MAINNET("pb", "m/505'/1'/0'/0/0")
 }
 
-class WalletSigner(networkType: NetworkType, mnemonic: String, passphrase: String = "") : Signer {
+class WalletSigner(prefix: String, path: String, mnemonic: String, passphrase: String = "") : Signer {
 
-    val wallet = Wallet.fromMnemonic(networkType.prefix, passphrase.toCharArray(), MnemonicWords.of(mnemonic))
+    constructor(networkType: NetworkType, mnemonic: String, passphrase: String = "") :
+        this(networkType.prefix, networkType.path, mnemonic, passphrase)
 
-    val account: Account = wallet[networkType.path]
+    val wallet = Wallet.fromMnemonic(prefix, passphrase.toCharArray(), MnemonicWords.of(mnemonic))
+
+    val account: Account = wallet[path]
 
     override fun address(): String = account.address.value
 
