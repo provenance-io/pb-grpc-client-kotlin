@@ -54,7 +54,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.Kotlin}")
 
     // Provenance
-//    implementation("io.provenance.protobuf:pb-proto-java:${Versions.ProvenanceProtos}")
     implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
 
     // Grpc
@@ -62,7 +61,6 @@ dependencies {
     implementation("io.grpc:grpc-netty:${Versions.Grpc}")
     implementation("io.grpc:grpc-protobuf:${Versions.Grpc}")
     implementation("io.grpc:grpc-stub:${Versions.Grpc}")
-    implementation("com.google.protobuf:protobuf-java:3.19.1")
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
     implementation("com.github.komputing.kethereum:bip32:${Versions.Kethereum}")
