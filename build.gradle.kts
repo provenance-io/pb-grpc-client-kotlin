@@ -48,9 +48,11 @@ dependencies {
     implementation("io.provenance:proto-kotlin:${Versions.ProvenanceProtos}")
 
     // Kotlin
-    implementation("org.jetbrains.kotlin:kotlin-allopen:${Versions.Kotlin}")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:${Versions.Kotlin}")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.Kotlin}")
+    // Pin kotlin packages together on a common version:
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:${Versions.Kotlin}"))
+    implementation("org.jetbrains.kotlin:kotlin-allopen")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Provenance
     implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
@@ -62,15 +64,6 @@ dependencies {
     implementation("io.grpc:grpc-stub:${Versions.Grpc}")
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
-    implementation("com.github.komputing.kethereum:bip32:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:bip39:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:crypto:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:crypto_api:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:crypto_impl_bouncycastle:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:extensions_kotlin:${Versions.Kethereum}")
-    implementation("com.github.komputing.kethereum:model:${Versions.Kethereum}")
-    implementation("com.github.komputing:kbase58:${Versions.Komputing}")
-    implementation("com.github.komputing:kbip44:${Versions.Komputing}")
 
     // Test
     testImplementation("org.jetbrains.kotlin:kotlin-test")

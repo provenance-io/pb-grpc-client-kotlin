@@ -29,7 +29,8 @@ data class BaseReq(
     val signers: List<BaseReqSigner>,
     val body: TxBody,
     val chainId: String,
-    val gasAdjustment: Float? = null
+    val gasAdjustment: Float? = null,
+    val feeGranter: String? = null
 ) {
 
     fun buildAuthInfo(gasEstimate: GasEstimate = GasEstimate(0)): AuthInfo =
@@ -38,6 +39,11 @@ data class BaseReq(
                 Fee.newBuilder()
                     .addAllAmount(gasEstimate.feesCalculated)
                     .setGasLimit(gasEstimate.limit)
+                    .also {
+                        if (feeGranter != null) {
+                            it.granter = feeGranter
+                        }
+                    }
             )
             .addAllSignerInfos(
                 signers.map {

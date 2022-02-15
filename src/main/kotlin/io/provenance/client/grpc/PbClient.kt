@@ -29,7 +29,7 @@ data class ChannelOpts(
     val executor: ExecutorService = Executors.newFixedThreadPool(8)
 )
 
-class PbClient(
+open class PbClient(
     val chainId: String,
     val channelUri: URI,
     opts: ChannelOpts = ChannelOpts(),
@@ -58,6 +58,7 @@ class PbClient(
 
     // Service clients
     val cosmosService = cosmos.tx.v1beta1.ServiceGrpc.newBlockingStub(channel)
+    val tendermintService = cosmos.base.tendermint.v1beta1.ServiceGrpc.newBlockingStub(channel)
 
     // Query clients
     val attributeClient = io.provenance.attribute.v1.QueryGrpc.newBlockingStub(channel)
@@ -87,6 +88,7 @@ class PbClient(
         txBody: TxBody,
         signers: List<BaseReqSigner>,
         gasAdjustment: Float? = null,
+        feeGranter: String? = null,
     ): BaseReq =
         signers.map {
             BaseReqSigner(
@@ -99,7 +101,8 @@ class PbClient(
                 signers = it,
                 body = txBody,
                 chainId = chainId,
-                gasAdjustment = gasAdjustment
+                gasAdjustment = gasAdjustment,
+                feeGranter = feeGranter
             )
         }
 
@@ -157,10 +160,12 @@ class PbClient(
         signers: List<BaseReqSigner>,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
         gasAdjustment: Float? = null,
+        feeGranter: String? = null
     ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
-        gasAdjustment = gasAdjustment
+        gasAdjustment = gasAdjustment,
+        feeGranter = feeGranter
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
 
     fun getAcountBalance(bech32Address: String, denom: String): CoinOuterClass.Coin =

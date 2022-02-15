@@ -12,6 +12,7 @@ import io.provenance.client.protobuf.extensions.toAny
 import io.provenance.client.protobuf.extensions.toTxBody
 import io.provenance.client.wallet.NetworkType
 import io.provenance.client.wallet.WalletSigner
+import io.provenance.client.wallet.fromMnemonic
 import org.junit.Before
 import org.junit.Ignore
 import java.io.File
@@ -51,7 +52,6 @@ class PbClientTest {
 
     @Test
     fun testClientQuery() {
-
         pbClient.authClient.accounts(
             QueryOuterClass.QueryAccountsRequest.getDefaultInstance()
         ).also { response ->
@@ -68,7 +68,7 @@ class PbClientTest {
      */
     @Test
     fun testClientTxn() {
-        val walletSignerToWallet = WalletSigner(NetworkType.TESTNET, mnemonic)
+        val walletSignerToWallet = fromMnemonic(NetworkType.TESTNET, mnemonic)
         val wallet = mapOfNodeSigners["node0"]!!
 
         val balanceHashOriginal = pbClient.getAcountBalance(wallet.address(), "nhash")
@@ -118,7 +118,7 @@ class PbClientTest {
     @Test
     fun testClientMultipleTxn() {
         // sample mnemonic
-        val walletSignerToWallet = WalletSigner(NetworkType.TESTNET, mnemonic)
+        val walletSignerToWallet = fromMnemonic(NetworkType.TESTNET, mnemonic)
         val wallet = mapOfNodeSigners["node0"]!!
 
         val balanceHashOriginal = pbClient.getAcountBalance(wallet.address(), "nhash")
@@ -188,7 +188,7 @@ class PbClientTest {
         for (i in 0 until 4) {
             val jsonString: String = File("../../provenance/build/node$i/key_seed.json").readText(Charsets.UTF_8)
             val map = Gson().fromJson(jsonString, mutableMapOf<String, String>().javaClass)
-            val walletSigner = WalletSigner(NetworkType.COSMOS_TESTNET, map["secret"]!!)
+            val walletSigner = fromMnemonic(NetworkType.COSMOS_TESTNET, map["secret"]!!)
             println(walletSigner.address())
             mapOfSigners.put("node$i", walletSigner)
         }
