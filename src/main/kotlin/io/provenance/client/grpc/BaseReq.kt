@@ -1,15 +1,17 @@
 package io.provenance.client.grpc
 
+import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import cosmos.auth.v1beta1.Auth
-import cosmos.tx.signing.v1beta1.Signing.SignMode
-import cosmos.tx.v1beta1.TxOuterClass.*
-import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
-import io.provenance.client.grpc.GasEstimate
-import com.google.protobuf.Any
 import cosmos.crypto.secp256k1.Keys
-
-
+import cosmos.tx.signing.v1beta1.Signing.SignMode
+import cosmos.tx.v1beta1.TxOuterClass.AuthInfo
+import cosmos.tx.v1beta1.TxOuterClass.Fee
+import cosmos.tx.v1beta1.TxOuterClass.ModeInfo
+import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
+import cosmos.tx.v1beta1.TxOuterClass.SignDoc
+import cosmos.tx.v1beta1.TxOuterClass.SignerInfo
+import cosmos.tx.v1beta1.TxOuterClass.TxBody
 
 interface Signer {
     fun address(): String
@@ -18,9 +20,9 @@ interface Signer {
 }
 
 data class BaseReqSigner(
-        val signer: Signer,
-        val sequenceOffset: Int = 0,
-        val account: Auth.BaseAccount? = null
+    val signer: Signer,
+    val sequenceOffset: Int = 0,
+    val account: Auth.BaseAccount? = null
 )
 
 data class BaseReq(
@@ -35,7 +37,7 @@ data class BaseReq(
             .setFee(
                 Fee.newBuilder()
                     .addAllAmount(
-                            gasEstimate.feeCalculated
+                        gasEstimate.feeCalculated
                     )
                     .setGasLimit(gasEstimate.limit)
             )

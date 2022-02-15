@@ -11,7 +11,6 @@ buildscript {
     }
 }
 
-
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     `java-library`
@@ -23,7 +22,7 @@ plugins {
 repositories {
     mavenCentral()
     // For KEthereum library
-    maven(url="https://jitpack.io")
+    maven(url = "https://jitpack.io")
 }
 
 java {
@@ -83,7 +82,6 @@ dependencies {
 
 configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
 
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -126,7 +124,6 @@ publishing {
     }
 }
 
-
 nexusPublishing {
     repositories {
         sonatype {
@@ -160,5 +157,3 @@ object Repos {
         }
     }
 }
-
-

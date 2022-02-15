@@ -21,13 +21,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-//Tests only work with `make localnet-start` being run on provenance github projects.
+// Tests only work with `make localnet-start` being run on provenance github projects.
 @Ignore
 class PbClientTest {
 
     val pbClient = PbClient(
-            chainId = "chain-local",
-            channelUri = URI("http://localhost:9090"),
+        chainId = "chain-local",
+        channelUri = URI("http://localhost:9090"),
     )
     var mapOfNodeSigners = mutableMapOf<String, WalletSigner>()
     // sample mnemonic, can be anything
@@ -36,24 +36,23 @@ class PbClientTest {
     @Before
     fun before() {
         mapOfNodeSigners = getAllVotingKeys()
-        val listOfMsgFees = pbClient.getAllMsgFees()?.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" || it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest"}
-        if(listOfMsgFees?.size!! !=2) {
-            if(listOfMsgFees.filter { it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }.isEmpty()) {createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/provenance.marker.v1.MsgAddMarkerRequest")}
-            if(listOfMsgFees.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" }.isEmpty()) {createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/cosmos.bank.v1beta1.MsgSend")}
+        val listOfMsgFees = pbClient.getAllMsgFees()?.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" || it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }
+        if (listOfMsgFees?.size!! != 2) {
+            if (listOfMsgFees.filter { it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }.isEmpty()) { createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/provenance.marker.v1.MsgAddMarkerRequest") }
+            if (listOfMsgFees.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" }.isEmpty()) { createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/cosmos.bank.v1beta1.MsgSend") }
         }
     }
-
 
     @Test
     fun testClientQuery() {
 
         pbClient.authClient.accounts(
-                QueryOuterClass.QueryAccountsRequest.getDefaultInstance()
+            QueryOuterClass.QueryAccountsRequest.getDefaultInstance()
         ).also { response ->
             println(response)
             assertTrue(
-                    response.accountsCount > 0,
-                    "Found zero accounts on blockchain or could not properly connect to localhost chain."
+                response.accountsCount > 0,
+                "Found zero accounts on blockchain or could not properly connect to localhost chain."
             )
         }
     }
@@ -72,17 +71,17 @@ class PbClientTest {
         // transfer 10000nhash
         val amount = "10000"
         val txn: TxOuterClass.TxBody = Tx.MsgSend.newBuilder()
-                .setFromAddress(wallet.address())
-                .setToAddress(walletSignerToWallet.address())
-                .addAmount(CoinOuterClass.Coin.newBuilder().setDenom("nhash").setAmount(amount))
-                .build()
-                .toAny()
-                .toTxBody()// todo create your own txn
+            .setFromAddress(wallet.address())
+            .setToAddress(walletSignerToWallet.address())
+            .addAmount(CoinOuterClass.Coin.newBuilder().setDenom("nhash").setAmount(amount))
+            .build()
+            .toAny()
+            .toTxBody() // todo create your own txn
 
         val baseRequest = pbClient.baseRequest(
-                txBody = txn,
-                signers = listOf(BaseReqSigner(wallet)),
-                1.5
+            txBody = txn,
+            signers = listOf(BaseReqSigner(wallet)),
+            1.5
         )
         val estimate: GasEstimate = pbClient.estimateTx(baseRequest)
 
@@ -94,8 +93,8 @@ class PbClientTest {
 
         val res = pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
         assertTrue(
-                res.txResponse.code == 0,
-                "Did not succeed."
+            res.txResponse.code == 0,
+            "Did not succeed."
         )
 
         // let the block commit
@@ -108,8 +107,6 @@ class PbClientTest {
         val hashConsumed = balanceHashOriginal.amount.toBigDecimal().subtract(balanceHash.amount.toBigDecimal()).subtract(amount.toBigDecimal())
         assertEquals(estimatedHash.amount.toString(), hashConsumed.toString(), "estimate should match actual")
         assertEquals(estimatedGwei.amount.toString(), gweiConsumed.toString(), "estimate should match actual")
-
-
     }
 
     @Test
@@ -124,23 +121,23 @@ class PbClientTest {
         // transfer 10000nhash
         val amount = "10000"
         val txn = Tx.MsgSend.newBuilder()
-                .setFromAddress(wallet.address())
-                .setToAddress(walletSignerToWallet.address())
-                .addAmount(CoinOuterClass.Coin.newBuilder().setDenom("nhash").setAmount(amount))
-                .build()
-                .toAny()
+            .setFromAddress(wallet.address())
+            .setToAddress(walletSignerToWallet.address())
+            .addAmount(CoinOuterClass.Coin.newBuilder().setDenom("nhash").setAmount(amount))
+            .build()
+            .toAny()
 
         val txn2 = Tx.MsgSend.newBuilder()
-                .setFromAddress(wallet.address())
-                .setToAddress(walletSignerToWallet.address())
-                .addAmount(CoinOuterClass.Coin.newBuilder().setDenom("nhash").setAmount(amount))
-                .build()
-                .toAny()
+            .setFromAddress(wallet.address())
+            .setToAddress(walletSignerToWallet.address())
+            .addAmount(CoinOuterClass.Coin.newBuilder().setDenom("nhash").setAmount(amount))
+            .build()
+            .toAny()
 
         val baseRequest = pbClient.baseRequest(
-                txBody = listOf(txn,txn2).toTxBody(),
-                signers = listOf(BaseReqSigner(wallet)),
-                1.5
+            txBody = listOf(txn, txn2).toTxBody(),
+            signers = listOf(BaseReqSigner(wallet)),
+            1.5
         )
         val estimate: GasEstimate = pbClient.estimateTx(baseRequest)
 
@@ -150,10 +147,10 @@ class PbClientTest {
         val estimatedGwei = estimate.feeCalculated.firstOrNull { it.denom == "gwei" }
         assertNotNull(estimatedGwei, "estimated gwei cannot be null")
 
-        val res = pbClient.estimateAndBroadcastTx(listOf(txn,txn2).toTxBody(), listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
+        val res = pbClient.estimateAndBroadcastTx(listOf(txn, txn2).toTxBody(), listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
         assertTrue(
-                res.txResponse.code == 0,
-                "Did not succeed."
+            res.txResponse.code == 0,
+            "Did not succeed."
         )
 
         // let the block commit
@@ -166,8 +163,6 @@ class PbClientTest {
         val hashConsumed = balanceHashOriginal.amount.toBigDecimal().subtract(balanceHash.amount.toBigDecimal()).subtract(amount.toBigDecimal()).subtract(amount.toBigDecimal())
         assertEquals(estimatedHash.amount.toString(), hashConsumed.toString(), "estimate should match actual")
         assertEquals(estimatedGwei.amount.toString(), gweiConsumed.toString(), "estimate should match actual")
-
-
     }
 
     @Test
@@ -176,8 +171,8 @@ class PbClientTest {
 
         val result = pbClient.storeWasm(wallet)
         assertTrue(
-                result.txResponse.code == 0,
-                "Did not succeed."
+            result.txResponse.code == 0,
+            "Did not succeed."
         )
         assertNotNull(result.txResponse.logsList.flatMap { it.eventsList }.filter { it.type == "store_code" }.get(0).attributesList.filter { it.key == "code_id" }.first().value)
     }
@@ -185,29 +180,28 @@ class PbClientTest {
     fun getAllVotingKeys(): MutableMap<String, WalletSigner> {
         val mapOfSigners = mutableMapOf<String, WalletSigner>()
         for (i in 0 until 4) {
-            val jsonString: String = File("../../provenance/build/node${i}/key_seed.json").readText(Charsets.UTF_8)
+            val jsonString: String = File("../../provenance/build/node$i/key_seed.json").readText(Charsets.UTF_8)
             val map = Gson().fromJson(jsonString, mutableMapOf<String, String>().javaClass)
             val walletSigner = WalletSigner(NetworkType.COSMOS_TESTNET, map["secret"]!!)
             println(walletSigner.address())
-            mapOfSigners.put("node${i}", walletSigner)
+            mapOfSigners.put("node$i", walletSigner)
         }
         return mapOfSigners
     }
 
     // propose governance and vote
-    fun createGovProposalAndVote(walletSigners: Map<String, WalletSigner>, msgType:String) {
-        assertTrue { pbClient.addMsgFeeProposal(walletSigners["node0"]!!,msgType).txResponse.code == 0 }
+    fun createGovProposalAndVote(walletSigners: Map<String, WalletSigner>, msgType: String) {
+        assertTrue { pbClient.addMsgFeeProposal(walletSigners["node0"]!!, msgType).txResponse.code == 0 }
 
         // let the block be committed
         Thread.sleep(10000)
 
         // vote on proposal
         val govProp = pbClient.getAllProposalsAndFilter()!!
-        assertTrue {  pbClient.voteOnProposal(walletSigners["node0"]!!, govProp.proposalId).txResponse.code == 0}
-        assertTrue {  pbClient.voteOnProposal(walletSigners["node1"]!!, govProp.proposalId).txResponse.code == 0}
-        assertTrue {  pbClient.voteOnProposal(walletSigners["node2"]!!, govProp.proposalId).txResponse.code == 0}
-        assertTrue {  pbClient.voteOnProposal(walletSigners["node3"]!!, govProp.proposalId).txResponse.code == 0}
+        assertTrue { pbClient.voteOnProposal(walletSigners["node0"]!!, govProp.proposalId).txResponse.code == 0 }
+        assertTrue { pbClient.voteOnProposal(walletSigners["node1"]!!, govProp.proposalId).txResponse.code == 0 }
+        assertTrue { pbClient.voteOnProposal(walletSigners["node2"]!!, govProp.proposalId).txResponse.code == 0 }
+        assertTrue { pbClient.voteOnProposal(walletSigners["node3"]!!, govProp.proposalId).txResponse.code == 0 }
         Thread.sleep(10000)
     }
 }
-
