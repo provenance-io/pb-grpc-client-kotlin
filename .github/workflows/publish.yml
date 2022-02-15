@@ -39,22 +39,22 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build -x test -Pversion=$VERSION
 
-#      - name: Install gpg secret key
-#        run: |
-#          export GPG_TTY=$(tty)
-#          echo -n "${{ secrets.OSSRH_GPG_SECRET_KEY }}" | base64 --decode | gpg --batch --import
-#          gpg --list-secret-keys --keyid-format LONG
-#          echo -n "${{ secrets.OSSRH_GPG_SECRET_KEY }}" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
-#        if: github.event_name == 'release'
+      - name: Install gpg secret key
+        run: |
+          export GPG_TTY=$(tty)
+          echo -n "${{ secrets.OSSRH_GPG_SECRET_KEY }}" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          echo -n "${{ secrets.OSSRH_GPG_SECRET_KEY }}" | base64 --decode > $GITHUB_WORKSPACE/release.gpg
+        if: github.event_name == 'release'
 
-#      - name: Publish to Maven Central
-#        run: |
-#          ./gradlew publishToSonatype $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
-#            -Pversion=$VERSION \
-#            -Psigning.keyId=B7D30ABE -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
-#            --info
-#        env:
-#          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-#          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-#          if: github.event_name == 'release'
+      - name: Publish to Maven Central
+        run: |
+          ./gradlew publishToSonatype $(if [ "${{github.event.release.prerelease}}" = "true" ]; then echo 'closeSonatypeStagingRepository'; else echo 'closeAndReleaseSonatypeStagingRepository'; fi) \
+            -Pversion=$VERSION \
+            -Psigning.keyId=B7D30ABE -Psigning.password="${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}" -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
+            --info
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          if: github.event_name == 'release'
 

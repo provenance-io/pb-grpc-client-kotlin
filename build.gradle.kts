@@ -28,7 +28,7 @@ repositories {
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
     withJavadocJar()
 }
@@ -36,7 +36,7 @@ java {
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Versions {
-    val ProvenanceProtos = "1.7.0-0.0.2"
+    val ProvenanceProtos = "v1.8.0-rc6"
     val ProvenanceHDWallet = "0.1.9"
     val BouncyCastle = "1.63"
     val Kethereum = "0.83.4"
@@ -46,7 +46,8 @@ object Versions {
 }
 
 dependencies {
-    implementation(files("./local_lib/proto-kotlin-feature_msg-based-fees-proto-25a2450.jar"))
+    // https://mvnrepository.com/artifact/io.provenance/proto-kotlin
+    implementation("io.provenance:proto-kotlin:${Versions.ProvenanceProtos}")
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-allopen:${Versions.Kotlin}")
@@ -54,7 +55,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.Kotlin}")
 
     // Provenance
-    implementation("io.provenance.protobuf:pb-proto-java:${Versions.ProvenanceProtos}")
+//    implementation("io.provenance.protobuf:pb-proto-java:${Versions.ProvenanceProtos}")
     implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
 
     // Grpc

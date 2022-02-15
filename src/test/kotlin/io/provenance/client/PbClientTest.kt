@@ -13,6 +13,7 @@ import io.provenance.client.wallet.WalletSigner
 import io.provenance.client.wallet.toAny
 import io.provenance.client.wallet.toTxBody
 import org.junit.Before
+import org.junit.Ignore
 import java.io.File
 import java.net.URI
 import kotlin.test.Test
@@ -20,6 +21,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+//Tests only work with `make localnet-start` being run on provenance github projects.
+@Ignore
 class PbClientTest {
 
     val pbClient = PbClient(
@@ -28,7 +31,7 @@ class PbClientTest {
     )
     var mapOfNodeSigners = mutableMapOf<String, WalletSigner>()
     // sample mnemonic, can be anything
-    val mnemonic = "tenant radar absurd ostrich music useless broom cup dragon depart annual charge lawsuit aware embark leader hour major venture private near inside daughter cabin" // any mnemonic
+    private val mnemonic = "tenant radar absurd ostrich music useless broom cup dragon depart annual charge lawsuit aware embark leader hour major venture private near inside daughter cabin" // any mnemonic
 
     @Before
     fun before() {
@@ -169,7 +172,6 @@ class PbClientTest {
 
     @Test
     fun testCreateSmartContract() {
-        val walletSignerToWallet = WalletSigner(NetworkType.TESTNET, mnemonic)
         val wallet = mapOfNodeSigners["node0"]!!
 
         val result = pbClient.storeWasm(wallet)

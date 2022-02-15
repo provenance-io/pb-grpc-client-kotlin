@@ -124,7 +124,7 @@ class PbClient(
                     tx.toBuilder().addAllSignatures(it).build()
                 }.let { txFinal ->
                     val msgFee = msgFeeClient.calculateTxFees(
-                            CalculateTxFeesRequest.newBuilder().setTxBytes(txFinal.toByteString()).setGasAdjustment(if (baseReq.gasAdjustment != null) baseReq.gasAdjustment?.toFloat()
+                            CalculateTxFeesRequest.newBuilder().setTxBytes(txFinal.toByteString()).setGasAdjustment(if (baseReq.gasAdjustment != null) baseReq.gasAdjustment.toFloat()
                             else GasEstimate.DEFAULT_FEE_ADJUSTMENT.toFloat()).build()
                     )
                     GasEstimate(
