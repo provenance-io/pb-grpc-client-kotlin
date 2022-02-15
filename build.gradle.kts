@@ -1,5 +1,3 @@
-import org.gradle.api.artifacts.dsl.RepositoryHandler
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import java.net.URI
 
 buildscript {
@@ -7,12 +5,12 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
     }
 }
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     `java-library`
     `maven-publish`
     signing
@@ -36,14 +34,18 @@ java {
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Versions {
-    val ProvenanceProtos = "1.7.0-0.0.2"
+    val ProvenanceProtos = "1.8.0-rc7"
     val ProvenanceHDWallet = "0.1.15"
     val BouncyCastle = "1.70"
-    val Grpc = "1.42.2"
-    val Kotlin = "1.5.32"
+    val Kethereum = "0.83.4"
+    val Komputing = "0.1"
+    val Grpc = "1.44.0"
+    val Kotlin = "1.6.10"
 }
 
 dependencies {
+    // https://mvnrepository.com/artifact/io.provenance/proto-kotlin
+    implementation("io.provenance:proto-kotlin:${Versions.ProvenanceProtos}")
 
     // Kotlin
     // Pin kotlin packages together on a common version:
@@ -53,7 +55,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // Provenance
-    implementation("io.provenance.protobuf:pb-proto-java:${Versions.ProvenanceProtos}")
     implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
 
     // Grpc
@@ -61,7 +62,6 @@ dependencies {
     implementation("io.grpc:grpc-netty:${Versions.Grpc}")
     implementation("io.grpc:grpc-protobuf:${Versions.Grpc}")
     implementation("io.grpc:grpc-stub:${Versions.Grpc}")
-
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
 

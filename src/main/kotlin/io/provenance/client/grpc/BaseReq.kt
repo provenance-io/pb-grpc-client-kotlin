@@ -3,7 +3,6 @@ package io.provenance.client.grpc
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import cosmos.auth.v1beta1.Auth
-import cosmos.base.v1beta1.CoinOuterClass.Coin
 import cosmos.crypto.secp256k1.Keys
 import cosmos.tx.signing.v1beta1.Signing.SignMode
 import cosmos.tx.v1beta1.TxOuterClass.AuthInfo
@@ -13,8 +12,6 @@ import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
 import cosmos.tx.v1beta1.TxOuterClass.SignDoc
 import cosmos.tx.v1beta1.TxOuterClass.SignerInfo
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
-
-const val DEFAULT_GAS_DENOM = "nhash"
 
 interface Signer {
     fun address(): String
@@ -32,7 +29,7 @@ data class BaseReq(
     val signers: List<BaseReqSigner>,
     val body: TxBody,
     val chainId: String,
-    val gasAdjustment: Double? = null,
+    val gasAdjustment: Float? = null,
     val feeGranter: String? = null
 ) {
 
@@ -40,14 +37,7 @@ data class BaseReq(
         AuthInfo.newBuilder()
             .setFee(
                 Fee.newBuilder()
-                    .addAllAmount(
-                        listOf(
-                            Coin.newBuilder()
-                                .setDenom(DEFAULT_GAS_DENOM)
-                                .setAmount(gasEstimate.fees.toString())
-                                .build()
-                        )
-                    )
+                    .addAllAmount(gasEstimate.feesCalculated)
                     .setGasLimit(gasEstimate.limit)
                     .also {
                         if (feeGranter != null) {
