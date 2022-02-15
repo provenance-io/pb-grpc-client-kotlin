@@ -1,5 +1,3 @@
-import org.gradle.api.artifacts.dsl.RepositoryHandler
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import java.net.URI
 
 buildscript {
@@ -7,16 +5,17 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
     }
 }
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     `java-library`
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
 }
 
 repositories {
@@ -35,13 +34,13 @@ java {
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Versions {
-    val ProvenanceProtos = "v1.8.0-rc6"
-    val ProvenanceHDWallet = "0.1.9"
-    val BouncyCastle = "1.63"
+    val ProvenanceProtos = "1.8.0-rc7"
+    val ProvenanceHDWallet = "0.1.15"
+    val BouncyCastle = "1.70"
     val Kethereum = "0.83.4"
     val Komputing = "0.1"
-    val Grpc = "1.42.0"
-    val Kotlin = "1.5.0"
+    val Grpc = "1.44.0"
+    val Kotlin = "1.6.10"
 }
 
 dependencies {

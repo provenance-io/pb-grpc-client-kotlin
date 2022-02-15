@@ -29,16 +29,14 @@ data class BaseReq(
     val signers: List<BaseReqSigner>,
     val body: TxBody,
     val chainId: String,
-    val gasAdjustment: Double? = null
+    val gasAdjustment: Float? = null
 ) {
 
     fun buildAuthInfo(gasEstimate: GasEstimate = GasEstimate(0)): AuthInfo =
         AuthInfo.newBuilder()
             .setFee(
                 Fee.newBuilder()
-                    .addAllAmount(
-                        gasEstimate.feeCalculated
-                    )
+                    .addAllAmount(gasEstimate.feesCalculated)
                     .setGasLimit(gasEstimate.limit)
             )
             .addAllSignerInfos(

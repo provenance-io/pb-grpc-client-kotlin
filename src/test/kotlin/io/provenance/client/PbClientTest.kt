@@ -8,10 +8,10 @@ import cosmos.tx.v1beta1.TxOuterClass
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.grpc.GasEstimate
 import io.provenance.client.grpc.PbClient
+import io.provenance.client.protobuf.extensions.toAny
+import io.provenance.client.protobuf.extensions.toTxBody
 import io.provenance.client.wallet.NetworkType
 import io.provenance.client.wallet.WalletSigner
-import io.provenance.client.wallet.toAny
-import io.provenance.client.wallet.toTxBody
 import org.junit.Before
 import org.junit.Ignore
 import java.io.File
@@ -30,16 +30,22 @@ class PbClientTest {
         channelUri = URI("http://localhost:9090"),
     )
     var mapOfNodeSigners = mutableMapOf<String, WalletSigner>()
+
     // sample mnemonic, can be anything
-    private val mnemonic = "tenant radar absurd ostrich music useless broom cup dragon depart annual charge lawsuit aware embark leader hour major venture private near inside daughter cabin" // any mnemonic
+    private val mnemonic =
+        "tenant radar absurd ostrich music useless broom cup dragon depart annual charge lawsuit aware embark leader hour major venture private near inside daughter cabin" // any mnemonic
 
     @Before
     fun before() {
         mapOfNodeSigners = getAllVotingKeys()
         val listOfMsgFees = pbClient.getAllMsgFees()?.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" || it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }
         if (listOfMsgFees?.size!! != 2) {
-            if (listOfMsgFees.filter { it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }.isEmpty()) { createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/provenance.marker.v1.MsgAddMarkerRequest") }
-            if (listOfMsgFees.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" }.isEmpty()) { createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/cosmos.bank.v1beta1.MsgSend") }
+            if (listOfMsgFees.filter { it.msgTypeUrl == "/provenance.marker.v1.MsgAddMarkerRequest" }.isEmpty()) {
+                createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/provenance.marker.v1.MsgAddMarkerRequest")
+            }
+            if (listOfMsgFees.filter { it.msgTypeUrl == "/cosmos.bank.v1beta1.MsgSend" }.isEmpty()) {
+                createGovProposalAndVote(walletSigners = mapOfNodeSigners, "/cosmos.bank.v1beta1.MsgSend")
+            }
         }
     }
 
@@ -81,17 +87,17 @@ class PbClientTest {
         val baseRequest = pbClient.baseRequest(
             txBody = txn,
             signers = listOf(BaseReqSigner(wallet)),
-            1.5
+            1.5f
         )
         val estimate: GasEstimate = pbClient.estimateTx(baseRequest)
 
         println("estimate is $estimate")
-        val estimatedHash = estimate.feeCalculated.firstOrNull { it.denom == "nhash" }
+        val estimatedHash = estimate.feesCalculated.firstOrNull { it.denom == "nhash" }
         assertNotNull(estimatedHash, "estimated hash cannot be null")
-        val estimatedGwei = estimate.feeCalculated.firstOrNull { it.denom == "gwei" }
+        val estimatedGwei = estimate.feesCalculated.firstOrNull { it.denom == "gwei" }
         assertNotNull(estimatedGwei, "estimated gwei cannot be null")
 
-        val res = pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
+        val res = pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5f)
         assertTrue(
             res.txResponse.code == 0,
             "Did not succeed."
@@ -100,8 +106,8 @@ class PbClientTest {
         // let the block commit
         Thread.sleep(10000)
 
-        val balanceHash = pbClient.getAcountBalance(wallet.account.address, "nhash")
-        val balanceGwei = pbClient.getAcountBalance(wallet.account.address, "gwei")
+        val balanceHash = pbClient.getAcountBalance(wallet.address(), "nhash")
+        val balanceGwei = pbClient.getAcountBalance(wallet.address(), "gwei")
 
         val gweiConsumed = balanceGweiOriginal.amount.toBigDecimal().subtract(balanceGwei.amount.toBigDecimal())
         val hashConsumed = balanceHashOriginal.amount.toBigDecimal().subtract(balanceHash.amount.toBigDecimal()).subtract(amount.toBigDecimal())
@@ -137,17 +143,17 @@ class PbClientTest {
         val baseRequest = pbClient.baseRequest(
             txBody = listOf(txn, txn2).toTxBody(),
             signers = listOf(BaseReqSigner(wallet)),
-            1.5
+            1.5f
         )
         val estimate: GasEstimate = pbClient.estimateTx(baseRequest)
 
         println("estimate is $estimate")
-        val estimatedHash = estimate.feeCalculated.firstOrNull { it.denom == "nhash" }
+        val estimatedHash = estimate.feesCalculated.firstOrNull { it.denom == "nhash" }
         assertNotNull(estimatedHash, "estimated hash cannot be null")
-        val estimatedGwei = estimate.feeCalculated.firstOrNull { it.denom == "gwei" }
+        val estimatedGwei = estimate.feesCalculated.firstOrNull { it.denom == "gwei" }
         assertNotNull(estimatedGwei, "estimated gwei cannot be null")
 
-        val res = pbClient.estimateAndBroadcastTx(listOf(txn, txn2).toTxBody(), listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
+        val res = pbClient.estimateAndBroadcastTx(listOf(txn, txn2).toTxBody(), listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5f)
         assertTrue(
             res.txResponse.code == 0,
             "Did not succeed."
@@ -156,8 +162,8 @@ class PbClientTest {
         // let the block commit
         Thread.sleep(10000)
 
-        val balanceHash = pbClient.getAcountBalance(wallet.account.address, "nhash")
-        val balanceGwei = pbClient.getAcountBalance(wallet.account.address, "gwei")
+        val balanceHash = pbClient.getAcountBalance(wallet.address(), "nhash")
+        val balanceGwei = pbClient.getAcountBalance(wallet.address(), "gwei")
 
         val gweiConsumed = balanceGweiOriginal.amount.toBigDecimal().subtract(balanceGwei.amount.toBigDecimal())
         val hashConsumed = balanceHashOriginal.amount.toBigDecimal().subtract(balanceHash.amount.toBigDecimal()).subtract(amount.toBigDecimal()).subtract(amount.toBigDecimal())
