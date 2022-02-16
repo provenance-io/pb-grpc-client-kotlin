@@ -1,21 +1,13 @@
 package io.provenance.client.grpc
 
 import com.google.protobuf.ByteString
-import cosmos.base.v1beta1.CoinOuterClass
-import cosmos.gov.v1beta1.Gov
 import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.protobuf.extensions.getBaseAccount
-import io.provenance.client.protobuf.extensions.toAny
-import io.provenance.client.protobuf.extensions.toTxBody
-import io.provenance.client.wallet.WalletSigner
 import io.provenance.msgfees.v1.CalculateTxFeesRequest
-import io.provenance.msgfees.v1.MsgFee
-import io.provenance.msgfees.v1.QueryAllMsgFeesRequest
 import java.io.Closeable
-import java.io.File
 import java.net.URI
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -32,6 +24,7 @@ data class ChannelOpts(
 open class PbClient(
     val chainId: String,
     val channelUri: URI,
+    val gasEstimationMethod: GasEstimationMethod,
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
@@ -106,7 +99,9 @@ open class PbClient(
             )
         }
 
-    fun estimateTx(baseReq: BaseReq): GasEstimate {
+    fun estimateTx(
+        baseReq: BaseReq
+    ): GasEstimate {
         val tx = TxOuterClass.Tx.newBuilder()
             .setBody(baseReq.body)
             .setAuthInfo(baseReq.buildAuthInfo())
@@ -115,19 +110,27 @@ open class PbClient(
         return baseReq.buildSignDocBytesList(tx.authInfo.toByteString(), tx.body.toByteString())
             .mapIndexed { index, signDocBytes ->
                 baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
-            }.let {
-                tx.toBuilder().addAllSignatures(it).build()
-            }.let { txFinal ->
-                val msgFee = msgFeeClient.calculateTxFees(
-                    CalculateTxFeesRequest.newBuilder()
-                        .setTxBytes(txFinal.toByteString())
-                        .setGasAdjustment((baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT).toFloat())
-                        .build()
-                )
-                GasEstimate(
-                    msgFee.estimatedGas,
-                    msgFee.totalFeesList
-                )
+            }.let { signatures ->
+                val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
+                val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
+
+                when (gasEstimationMethod) {
+                    GasEstimationMethod.COSMOS_SIMULATION -> {
+                        cosmosService.simulate(
+                            ServiceOuterClass.SimulateRequest.newBuilder()
+                                .setTxBytes(signedTx.toByteString())
+                                .build()
+                        ).let { sim -> fromSimulation(sim.gasInfo.gasUsed, gasAdjustment) }
+                    }
+                    GasEstimationMethod.MSG_FEE_CALCULATION -> {
+                        msgFeeClient.calculateTxFees(
+                            CalculateTxFeesRequest.newBuilder()
+                                .setTxBytes(signedTx.toByteString())
+                                .setGasAdjustment(gasAdjustment.toFloat())
+                                .build()
+                        ).let { msgFee -> GasEstimate(msgFee.estimatedGas, msgFee.totalFeesList) }
+                    }
+                }
             }
     }
 
@@ -167,53 +170,4 @@ open class PbClient(
         gasAdjustment = gasAdjustment,
         feeGranter = feeGranter
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
-
-    fun getAcountBalance(bech32Address: String, denom: String): CoinOuterClass.Coin =
-        bankClient.balance(
-            cosmos.bank.v1beta1.QueryOuterClass.QueryBalanceRequest.newBuilder().setAddress(bech32Address).setDenom(denom).build()
-        ).balance
-
-    fun getAllMsgFees(): MutableList<MsgFee>? =
-        msgFeeClient.queryAllMsgFees(QueryAllMsgFeesRequest.getDefaultInstance()).msgFeesList
-
-    fun addMsgFeeProposal(walletSigner: WalletSigner, msgType: String): ServiceOuterClass.BroadcastTxResponse {
-        val addGovProposal = io.provenance.msgfees.v1.AddMsgFeeProposal.newBuilder().setAdditionalFee(
-            CoinOuterClass.Coin.newBuilder()
-                .setDenom("gwei").setAmount(2000.toString()).build()
-        ).setDescription("Msg fee for Create Marker.")
-            .setMsgTypeUrl(msgType).setTitle("Vote for adding fee's to create marker")
-            .build().toAny()
-        val submitProposal = cosmos.gov.v1beta1.Tx.MsgSubmitProposal.newBuilder().setContent(addGovProposal)
-            .setProposer(walletSigner.address()).addInitialDeposit(
-                CoinOuterClass.Coin.newBuilder()
-                    .setAmount(15000000000.toString())
-                    .setDenom("nhash")
-                    .build()
-            ).build()
-        val response = estimateAndBroadcastTx(submitProposal.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5)
-        return response
-    }
-
-    fun voteOnProposal(walletSigner: WalletSigner, proposalId: Long): ServiceOuterClass.BroadcastTxResponse {
-        val vote = cosmos.gov.v1beta1.Tx.MsgVote.newBuilder().setProposalId(proposalId).setVoter(walletSigner.address())
-            .setOption(Gov.VoteOption.VOTE_OPTION_YES).build()
-        val response = estimateAndBroadcastTx(vote.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5)
-        return response
-    }
-
-    fun getAllProposalsAndFilter(): Gov.Proposal? {
-        return govClient.proposals(cosmos.gov.v1beta1.QueryOuterClass.QueryProposalsRequest.getDefaultInstance())
-            .proposalsList.firstOrNull { it.status == Gov.ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD }
-    }
-
-    fun storeWasm(walletSigner: WalletSigner): ServiceOuterClass.BroadcastTxResponse {
-        val wasmContract = ByteString.copyFrom(File("src/main/resources/ats_smart_contract.wasm").readBytes())
-        return estimateAndBroadcastTx(
-            cosmwasm.wasm.v1.Tx.MsgStoreCode.newBuilder()
-                .setSender(walletSigner.address())
-                .setWasmByteCode(wasmContract)
-                .build().toAny().toTxBody(),
-            listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5, mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK
-        )
-    }
 }
