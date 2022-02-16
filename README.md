@@ -36,11 +36,28 @@ implementation("io.provenance.client:pb-grpc-client-kotlin:${version}")
 
 ## Setup
 
-Setup the client by supplying the chain id (e.g. `pio-testnet-1`) and URI of the node to which you are connecting. The normal GRPC port is `9090`.
+Setup the client by supplying:
+- the chain id (e.g. `pio-testnet-1`)
+- the URI of the node to which you are connecting (default port is `9090`)
+- the gas estimation method
+  - for pbc version 1.8 or higher use `MSG_FEE_CALCULATION`
+  - for pbc version 1.7 or lower use `COSMOS_SIMULATION`
 
 Example: for a locally running testnet instance:
 ```kotlin
-val pbClient = PbClient("chain-local", URI("http://localhost:9090"))
+// pbc version 1.8 or higher
+val pbClient = PbClient(
+    "chain-local", 
+    URI("http://localhost:9090"),
+    GasEstimationMethod.MSG_FEE_CALCULATION
+)
+
+// pbc version 1.7 or lower
+val pbClient = PbClient(
+    "chain-local", 
+    URI("http://localhost:9090"),
+    GasEstimationMethod.COSMOS_SIMULATION
+)
 ```
 
 Optionally configure GRPC by also passing `ChannelOpts` or a `NettyChannelBuilder`.
@@ -50,6 +67,7 @@ Example: Set client idle timeout to 1 minute
 val pbClient = PbClient(
     chainId = "chain-local",
     channelUri = URI("http://localhost:9090"),
+    gasEstimationMethod = GasEstimationMethod.MSG_FEE_CALCULATION,
     opts = ChannelOpts(idleTimeout = (1L to TimeUnit.MINUTES))
 )
 ```
@@ -141,6 +159,7 @@ fun main(args: Array<String>) {
     val pbClient = PbClient(
         chainId = "chain-local",
         channelUri = URI("http://localhost:9090"),
+        gasEstimationMethod = GasEstimationMethod.MSG_FEE_CALCULATION,
         opts = ChannelOpts(idleTimeout = (1L to TimeUnit.MINUTES))
     )
 
