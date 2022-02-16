@@ -29,7 +29,7 @@ data class BaseReq(
     val signers: List<BaseReqSigner>,
     val body: TxBody,
     val chainId: String,
-    val gasAdjustment: Float? = null,
+    val gasAdjustment: Double? = null,
     val feeGranter: String? = null
 ) {
 
