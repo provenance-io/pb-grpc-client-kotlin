@@ -87,7 +87,7 @@ class PbClientTest {
         val baseRequest = pbClient.baseRequest(
             txBody = txn,
             signers = listOf(BaseReqSigner(wallet)),
-            1.5f
+            1.5
         )
         val estimate: GasEstimate = pbClient.estimateTx(baseRequest)
 
@@ -97,7 +97,7 @@ class PbClientTest {
         val estimatedGwei = estimate.feesCalculated.firstOrNull { it.denom == "gwei" }
         assertNotNull(estimatedGwei, "estimated gwei cannot be null")
 
-        val res = pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5f)
+        val res = pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
         assertTrue(
             res.txResponse.code == 0,
             "Did not succeed."
@@ -143,7 +143,7 @@ class PbClientTest {
         val baseRequest = pbClient.baseRequest(
             txBody = listOf(txn, txn2).toTxBody(),
             signers = listOf(BaseReqSigner(wallet)),
-            1.5f
+            1.5
         )
         val estimate: GasEstimate = pbClient.estimateTx(baseRequest)
 
@@ -153,7 +153,7 @@ class PbClientTest {
         val estimatedGwei = estimate.feesCalculated.firstOrNull { it.denom == "gwei" }
         assertNotNull(estimatedGwei, "estimated gwei cannot be null")
 
-        val res = pbClient.estimateAndBroadcastTx(listOf(txn, txn2).toTxBody(), listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5f)
+        val res = pbClient.estimateAndBroadcastTx(listOf(txn, txn2).toTxBody(), listOf(BaseReqSigner(wallet)), gasAdjustment = 1.5)
         assertTrue(
             res.txResponse.code == 0,
             "Did not succeed."

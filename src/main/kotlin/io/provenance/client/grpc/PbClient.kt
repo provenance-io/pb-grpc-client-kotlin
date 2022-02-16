@@ -87,7 +87,7 @@ open class PbClient(
     fun baseRequest(
         txBody: TxBody,
         signers: List<BaseReqSigner>,
-        gasAdjustment: Float? = null,
+        gasAdjustment: Double? = null,
         feeGranter: String? = null,
     ): BaseReq =
         signers.map {
@@ -121,7 +121,7 @@ open class PbClient(
                 val msgFee = msgFeeClient.calculateTxFees(
                     CalculateTxFeesRequest.newBuilder()
                         .setTxBytes(txFinal.toByteString())
-                        .setGasAdjustment(baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT)
+                        .setGasAdjustment((baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT).toFloat())
                         .build()
                 )
                 GasEstimate(
@@ -159,7 +159,7 @@ open class PbClient(
         txBody: TxBody,
         signers: List<BaseReqSigner>,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
-        gasAdjustment: Float? = null,
+        gasAdjustment: Double? = null,
         feeGranter: String? = null
     ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
         txBody = txBody,
@@ -190,14 +190,14 @@ open class PbClient(
                     .setDenom("nhash")
                     .build()
             ).build()
-        val response = estimateAndBroadcastTx(submitProposal.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5f)
+        val response = estimateAndBroadcastTx(submitProposal.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5)
         return response
     }
 
     fun voteOnProposal(walletSigner: WalletSigner, proposalId: Long): ServiceOuterClass.BroadcastTxResponse {
         val vote = cosmos.gov.v1beta1.Tx.MsgVote.newBuilder().setProposalId(proposalId).setVoter(walletSigner.address())
             .setOption(Gov.VoteOption.VOTE_OPTION_YES).build()
-        val response = estimateAndBroadcastTx(vote.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5f)
+        val response = estimateAndBroadcastTx(vote.toAny().toTxBody(), listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5)
         return response
     }
 
@@ -213,7 +213,7 @@ open class PbClient(
                 .setSender(walletSigner.address())
                 .setWasmByteCode(wasmContract)
                 .build().toAny().toTxBody(),
-            listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5f, mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK
+            listOf(BaseReqSigner(walletSigner)), gasAdjustment = 1.5, mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK
         )
     }
 }
