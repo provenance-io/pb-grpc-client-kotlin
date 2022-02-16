@@ -7,7 +7,7 @@ import kotlin.math.ceil
  * The gas estimate implementation
  *
  * @param limit The estimated gas limit.
- * @param feesCalculated A list of [CoinOuterClass.Coin] calculated by a [GasEstimationMethod].
+ * @param feesCalculated A list of [CoinOuterClass.Coin].
  */
 data class GasEstimate(val limit: Long, val feesCalculated: List<CoinOuterClass.Coin> = emptyList()) {
 
@@ -21,7 +21,7 @@ data class GasEstimate(val limit: Long, val feesCalculated: List<CoinOuterClass.
  * The gas estimate implementation
  *
  * @param estimate The estimated gas limit.
- * @param adjustment A list of [CoinOuterClass.Coin] calculated by a [GasEstimationMethod].
+ * @param adjustment An adjustment to apply to the gas estimate.
  */
 fun fromSimulation(estimate: Long, adjustment: Double): GasEstimate {
     val limit = ceil(estimate * adjustment).toLong()

@@ -99,9 +99,7 @@ open class PbClient(
             )
         }
 
-    fun estimateTx(
-        baseReq: BaseReq
-    ): GasEstimate {
+    fun estimateTx(baseReq: BaseReq): GasEstimate {
         val tx = TxOuterClass.Tx.newBuilder()
             .setBody(baseReq.body)
             .setAuthInfo(baseReq.buildAuthInfo())
