@@ -18,7 +18,7 @@ data class GasEstimate(val limit: Long, val feesCalculated: List<CoinOuterClass.
 }
 
 /**
- * The gas estimate implementation
+ * Creates a [GasEstimate] when [GasEstimationMethod.COSMOS_SIMULATION] is used.
  *
  * @param estimate The estimated gas limit.
  * @param adjustment An adjustment to apply to the gas estimate.
@@ -35,10 +35,10 @@ fun fromSimulation(estimate: Long, adjustment: Double): GasEstimate {
 }
 
 /**
- * A set of flags used to determine how gas should be estimated for a transaction
+ * A set of flags used to specify how gas should be estimated
  *
- * - `COSMOS_SIMULATION` - A flag for cosmos simulation gas estimation. Must be used when interacting with pbc 1.7 or lower.
- * - `MSG_FEE_CALCULATION` - A flag for message fee endpoint gas estimation. Only compatible and should be used with pbc 1.8 or greater.
+ * - `COSMOS_SIMULATION` - A flag to specify cosmos simulation gas estimation. Must be used when interacting with pbc 1.7 or lower.
+ * - `MSG_FEE_CALCULATION` - A flag to specify message fee endpoint gas estimation. Only compatible and should be used with pbc 1.8 or greater.
  */
 enum class GasEstimationMethod {
     /**
