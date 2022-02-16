@@ -7,10 +7,11 @@ import io.provenance.client.grpc.GasEstimationMethod
 import io.provenance.client.grpc.PbClient
 import io.provenance.client.wallet.NetworkType
 import io.provenance.client.wallet.fromMnemonic
+import org.junit.Ignore
 import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertTrue
-
+@Ignore
 class PbClientTest {
 
     val pbClient = PbClient(
