@@ -6,6 +6,7 @@ import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.protobuf.extensions.getBaseAccount
+import io.provenance.msgfees.v1.QueryParamsRequest
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.ExecutorService
@@ -67,7 +68,10 @@ open class PbClient(
     val markerClient = io.provenance.marker.v1.QueryGrpc.newBlockingStub(channel)
     val metadataClient = io.provenance.metadata.v1.QueryGrpc.newBlockingStub(channel)
     val mintClient = cosmos.mint.v1beta1.QueryGrpc.newBlockingStub(channel)
+
+    @TestnetOnly
     val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
+
     val nameClient = io.provenance.name.v1.QueryGrpc.newBlockingStub(channel)
     val paramsClient = cosmos.params.v1beta1.QueryGrpc.newBlockingStub(channel)
     val slashingClient = cosmos.slashing.v1beta1.QueryGrpc.newBlockingStub(channel)
@@ -75,6 +79,12 @@ open class PbClient(
     val transferClient = ibc.applications.transfer.v1.QueryGrpc.newBlockingStub(channel)
     val upgradeClient = cosmos.upgrade.v1beta1.QueryGrpc.newBlockingStub(channel)
     val wasmClient = cosmwasm.wasm.v1.QueryGrpc.newBlockingStub(channel)
+
+    @TestnetOnly
+    val nodeFeeParams = lazy { msgFeeClient.params(QueryParamsRequest.getDefaultInstance()).params }
+
+    @TestnetOnly
+    val nodeGasPrice = lazy { nodeFeeParams.value.floorGasPrice.amount.toDouble() }
 
     fun baseRequest(
         txBody: TxBody,
@@ -152,3 +162,8 @@ open class PbClient(
         feeGranter = feeGranter
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
 }
+
+@RequiresOptIn(message = "This API is experimental and only exists in test.")
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.PROPERTY)
+annotation class TestnetOnly

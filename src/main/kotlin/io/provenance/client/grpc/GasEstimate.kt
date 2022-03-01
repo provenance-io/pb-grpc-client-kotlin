@@ -19,6 +19,8 @@ import org.apache.http.impl.client.HttpClientBuilder
 data class GasEstimate(val limit: Long, val feesCalculated: List<CoinOuterClass.Coin> = emptyList()) {
     companion object {
         const val DEFAULT_FEE_ADJUSTMENT = 1.25
+
+        // TODO - Remove once mainnet.version > 1.8
         const val DEFAULT_GAS_PRICE = 1905.00
     }
 }
@@ -28,16 +30,13 @@ data class GasEstimate(val limit: Long, val feesCalculated: List<CoinOuterClass.
  *
  * @param estimate The estimated gas limit.
  * @param adjustment An adjustment to apply to the gas estimate.
+ *
+ * TODO - Remove once mainnet.version > 1.8
  */
-fun fromSimulation(estimate: Long, adjustment: Double): GasEstimate {
+fun fromSimulation(estimate: Long, adjustment: Double, gasPrice: Double): GasEstimate {
     val limit = ceil(estimate * adjustment).toLong()
-    val feeAmount = ceil(limit * GasEstimate.DEFAULT_GAS_PRICE).toLong()
-    return listOf(
-        CoinOuterClass.Coin.newBuilder()
-            .setAmount(feeAmount.toString())
-            .setDenom("nhash")
-            .build()
-    ).let { fees -> GasEstimate(limit, fees) }
+    val feeAmount = ceil(limit * gasPrice).toLong()
+    return GasEstimate(limit, listOf(feeAmount.toCoin("nhash")))
 }
 
 /**
@@ -46,44 +45,48 @@ fun fromSimulation(estimate: Long, adjustment: Double): GasEstimate {
  * @param adj The gas adjustment being applied.
  * @return Gas estimates.
  */
-typealias GasEstimator = (tx: TxOuterClass.Tx, adj: Double) -> GasEstimate
+typealias GasEstimator = (tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate
 
 /**
  * Cosmos simulation gas estimation. Must be used when interacting with pbc 1.7 or lower.
+ * TODO - Remove once mainnet.version > 1.8
  */
 private val CosmosSimulationGasEstimator : PbGasEstimator = {
-    { tx, adj ->
+    { tx, adjustment ->
         val sim = cosmosService.simulate(
             ServiceOuterClass.SimulateRequest.newBuilder()
                 .setTxBytes(tx.toByteString())
                 .build()
         )
-        fromSimulation(sim.gasInfo.gasUsed, adj)
+        fromSimulation(sim.gasInfo.gasUsed, adjustment, GasEstimate.DEFAULT_GAS_PRICE)
     }
 }
 
 /**
  * Message fee endpoint gas estimation. Only compatible and should be used with pbc 1.8 or greater.
  */
+@TestnetOnly
 private val MsgFeeCalculationGasEstimator : PbGasEstimator = {
-    { tx, adj ->
+    { tx, adjustment ->
         val estimate = msgFeeClient.calculateTxFees(
             CalculateTxFeesRequest.newBuilder()
                 .setTxBytes(tx.toByteString())
-                .setGasAdjustment(adj.toFloat())
+                .setGasAdjustment(adjustment.toFloat())
                 .build()
         )
         GasEstimate(estimate.estimatedGas, estimate.totalFeesList)
     }
 }
 
-private fun CustomGasPriceGasEstimator(delegate: PbGasEstimator, gasPrice: CoinOuterClass.Coin): PbGasEstimator = {
-    { tx, adj ->
-        val estimate = delegate(this)(tx, adj)
-        val newFees = estimate.feesCalculated.map { c ->
-            c.toBuilder().setAmount((c.amount.toInt() * gasPrice.amount.toInt()).toString()).build()
-        }
-        estimate.copy(feesCalculated = newFees)
+@TestnetOnly
+private fun FloatingGasPriceGasEstimator(delegate: PbGasEstimator, floatingGasPrice: CoinOuterClass.Coin): PbGasEstimator = {
+    { tx, adjustment ->
+        // Original estimate
+        val estimate = delegate(this)(tx, adjustment)
+        // Adjust up or down based on floating factor.
+        val factor = floatingGasPrice.amount.toDouble() / nodeGasPrice.value
+        // Updated values
+        estimate.copy(feesCalculated = estimate.feesCalculated * factor)
     }
 }
 
@@ -104,13 +107,15 @@ object GasEstimationMethod {
     /**
      * A flag for message fee endpoint gas estimation. Only compatible and should be used with pbc 1.8 or greater.
      */
+    @TestnetOnly
     val MSG_FEE_CALCULATION: PbGasEstimator = MsgFeeCalculationGasEstimator
 
     /**
-     *
+     * Add a floating adjustment based on current market rates to estimation.
      */
-    fun CUSTOM_GAS_PRICE_GAS_ESTIMATE(delegate: PbGasEstimator, getGasPrice: () -> CoinOuterClass.Coin): PbGasEstimator =
-        CustomGasPriceGasEstimator(delegate, getGasPrice())
+    @TestnetOnly
+    fun floatingGasPrice(delegate: PbGasEstimator, getGasPrice: () -> CoinOuterClass.Coin): PbGasEstimator =
+        FloatingGasPriceGasEstimator(delegate, getGasPrice())
 }
 
 /**
@@ -139,4 +144,25 @@ object UrlGasFetcher {
             }
         }
     }
+}
+
+private fun Long.toCoin(denom: String): CoinOuterClass.Coin = (toString() + denom).toCoin()
+
+private fun String.toCoin(): CoinOuterClass.Coin {
+    val split = indexOfFirst { it.isLetter() }
+    require(split != 0) { "invalid amount for coin:$this" }
+    require(split > 0) { "invalid denom for coin:$this" }
+
+    return CoinOuterClass.Coin.newBuilder()
+        .setAmount(substring(0, split))
+        .setDenom(substring(split, length))
+        .build()
+}
+
+private operator fun List<CoinOuterClass.Coin>.times(other: Double): List<CoinOuterClass.Coin> = map {
+    CoinOuterClass.Coin
+        .newBuilder()
+        .mergeFrom(it)
+        .setAmount((it.amount.toDouble() * other).toBigDecimal().toPlainString())
+        .build()
 }
