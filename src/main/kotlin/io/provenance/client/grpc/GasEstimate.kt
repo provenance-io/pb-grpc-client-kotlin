@@ -2,7 +2,7 @@ package io.provenance.client.grpc
 
 import cosmos.base.v1beta1.CoinOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
-import io.provenance.client.TestnetFeature
+import io.provenance.client.TestnetFeaturePreview
 import io.provenance.client.gas.estimators.MsgFeeCalculationGasEstimator
 import io.provenance.client.gas.estimators.cosmosSimulationGasEstimator
 import io.provenance.client.gas.estimators.floatingGasPriceGasEstimator
@@ -54,7 +54,7 @@ object GasEstimationMethod {
     /**
      * A flag for message fee endpoint gas estimation. Only compatible and should be used with pbc 1.8 or greater.
      */
-    @TestnetFeature
+    @TestnetFeaturePreview
     val MSG_FEE_CALCULATION: PbGasEstimator = MsgFeeCalculationGasEstimator
 }
 
@@ -81,6 +81,6 @@ object GasEstimationMethod {
  * @param gasPrices The current gas price supplier.
  * @return [PbGasEstimator]
  */
-@TestnetFeature
+@TestnetFeaturePreview
 fun floatingGasPrices(delegate: PbGasEstimator, gasPrices: GasPrices): PbGasEstimator =
     floatingGasPriceGasEstimator(delegate, gasPrices)

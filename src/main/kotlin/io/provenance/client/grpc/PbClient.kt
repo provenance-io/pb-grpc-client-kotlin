@@ -5,7 +5,7 @@ import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
-import io.provenance.client.TestnetFeature
+import io.provenance.client.TestnetFeaturePreview
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.msgfees.v1.QueryParamsRequest
 import java.io.Closeable
@@ -70,7 +70,7 @@ open class PbClient(
     val metadataClient = io.provenance.metadata.v1.QueryGrpc.newBlockingStub(channel)
     val mintClient = cosmos.mint.v1beta1.QueryGrpc.newBlockingStub(channel)
 
-    @TestnetFeature
+    @TestnetFeaturePreview
     val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
 
     val nameClient = io.provenance.name.v1.QueryGrpc.newBlockingStub(channel)
@@ -81,10 +81,10 @@ open class PbClient(
     val upgradeClient = cosmos.upgrade.v1beta1.QueryGrpc.newBlockingStub(channel)
     val wasmClient = cosmwasm.wasm.v1.QueryGrpc.newBlockingStub(channel)
 
-    @TestnetFeature
+    @TestnetFeaturePreview
     val nodeFeeParams = lazy { msgFeeClient.params(QueryParamsRequest.getDefaultInstance()).params }
 
-    @TestnetFeature
+    @TestnetFeaturePreview
     val nodeGasPrice = lazy { nodeFeeParams.value.floorGasPrice.amount.toDouble() }
 
     fun baseRequest(

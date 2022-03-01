@@ -1,11 +1,11 @@
 package io.provenance.client.gas.estimators
 
-import io.provenance.client.TestnetFeature
+import io.provenance.client.TestnetFeaturePreview
 import io.provenance.client.gas.prices.GasPrices
 import io.provenance.client.grpc.PbGasEstimator
 import io.provenance.client.internal.extensions.times
 
-@TestnetFeature
+@TestnetFeaturePreview
 internal fun floatingGasPriceGasEstimator(delegate: PbGasEstimator, floatingGasPrice: GasPrices): PbGasEstimator = {
 	{ tx, adjustment ->
 		val price = floatingGasPrice()
