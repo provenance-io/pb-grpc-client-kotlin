@@ -11,14 +11,14 @@ import kotlin.time.Duration
  * Cache the gas prices for a determined period of time
  */
 class CachedGasPrice(private val gasPrices: GasPrices, private val duration: Duration) : GasPrices {
-	private val lastFetch = AtomicReference(OffsetDateTime.MIN)
-	private val cachedValue = AtomicReference("0nhash".toCoin())
+    private val lastFetch = AtomicReference(OffsetDateTime.MIN)
+    private val cachedValue = AtomicReference("0nhash".toCoin())
 
-	override fun invoke(): CoinOuterClass.Coin {
-		if (OffsetDateTime.now().isAfter(lastFetch.get().plus(duration.inWholeMilliseconds, ChronoUnit.MILLIS))) {
-			cachedValue.set(gasPrices())
-			lastFetch.set(OffsetDateTime.now())
-		}
-		return cachedValue.get()
-	}
+    override fun invoke(): CoinOuterClass.Coin {
+        if (OffsetDateTime.now().isAfter(lastFetch.get().plus(duration.inWholeMilliseconds, ChronoUnit.MILLIS))) {
+            cachedValue.set(gasPrices())
+            lastFetch.set(OffsetDateTime.now())
+        }
+        return cachedValue.get()
+    }
 }
