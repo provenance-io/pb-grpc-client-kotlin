@@ -6,7 +6,7 @@ import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.protobuf.extensions.getBaseAccount
-import io.provenance.msgfees.v1.CalculateTxFeesRequest
+import io.provenance.msgfees.v1.QueryParamsRequest
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.ExecutorService
@@ -24,7 +24,7 @@ data class ChannelOpts(
 open class PbClient(
     val chainId: String,
     val channelUri: URI,
-    val gasEstimationMethod: GasEstimationMethod,
+    val gasEstimationMethod: PbGasEstimator,
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
@@ -68,7 +68,10 @@ open class PbClient(
     val markerClient = io.provenance.marker.v1.QueryGrpc.newBlockingStub(channel)
     val metadataClient = io.provenance.metadata.v1.QueryGrpc.newBlockingStub(channel)
     val mintClient = cosmos.mint.v1beta1.QueryGrpc.newBlockingStub(channel)
+
+    // @TestnetFeaturePreview
     val msgFeeClient = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
+
     val nameClient = io.provenance.name.v1.QueryGrpc.newBlockingStub(channel)
     val paramsClient = cosmos.params.v1beta1.QueryGrpc.newBlockingStub(channel)
     val slashingClient = cosmos.slashing.v1beta1.QueryGrpc.newBlockingStub(channel)
@@ -76,6 +79,12 @@ open class PbClient(
     val transferClient = ibc.applications.transfer.v1.QueryGrpc.newBlockingStub(channel)
     val upgradeClient = cosmos.upgrade.v1beta1.QueryGrpc.newBlockingStub(channel)
     val wasmClient = cosmwasm.wasm.v1.QueryGrpc.newBlockingStub(channel)
+
+    // @TestnetFeaturePreview
+    val nodeFeeParams = lazy { msgFeeClient.params(QueryParamsRequest.getDefaultInstance()).params }
+
+    // @TestnetFeaturePreview
+    val nodeGasPrice = lazy { nodeFeeParams.value.floorGasPrice.amount.toDouble() }
 
     fun baseRequest(
         txBody: TxBody,
@@ -111,24 +120,8 @@ open class PbClient(
             }.let { signatures ->
                 val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
                 val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
-
-                when (gasEstimationMethod) {
-                    GasEstimationMethod.COSMOS_SIMULATION -> {
-                        cosmosService.simulate(
-                            ServiceOuterClass.SimulateRequest.newBuilder()
-                                .setTxBytes(signedTx.toByteString())
-                                .build()
-                        ).let { sim -> fromSimulation(sim.gasInfo.gasUsed, gasAdjustment) }
-                    }
-                    GasEstimationMethod.MSG_FEE_CALCULATION -> {
-                        msgFeeClient.calculateTxFees(
-                            CalculateTxFeesRequest.newBuilder()
-                                .setTxBytes(signedTx.toByteString())
-                                .setGasAdjustment(gasAdjustment.toFloat())
-                                .build()
-                        ).let { msgFee -> GasEstimate(msgFee.estimatedGas, msgFee.totalFeesList) }
-                    }
-                }
+                val gasEstimator = gasEstimationMethod()
+                gasEstimator(signedTx, gasAdjustment)
             }
     }
 

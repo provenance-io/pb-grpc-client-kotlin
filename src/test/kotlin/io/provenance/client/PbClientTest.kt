@@ -11,7 +11,9 @@ import org.junit.Ignore
 import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertTrue
+
 @Ignore
+// @OptIn(TestnetFeaturePreview::class)
 class PbClientTest {
 
     val pbClient = PbClient(

@@ -37,8 +37,6 @@ object Versions {
     val ProvenanceProtos = "1.8.0-rc7"
     val ProvenanceHDWallet = "0.1.15"
     val BouncyCastle = "1.70"
-    val Kethereum = "0.83.4"
-    val Komputing = "0.1"
     val Grpc = "1.44.0"
     val Kotlin = "1.6.10"
 }
