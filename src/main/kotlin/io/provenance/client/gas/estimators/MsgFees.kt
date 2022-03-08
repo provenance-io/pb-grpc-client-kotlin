@@ -16,6 +16,6 @@ internal val MsgFeeCalculationGasEstimator: PbGasEstimator = {
                 .setGasAdjustment(adjustment.toFloat())
                 .build()
         )
-        GasEstimate(estimate.estimatedGas, estimate.totalFeesList)
+        GasEstimate(estimate.estimatedGas, estimate.totalFeesList, estimate.additionalFeesList)
     }
 }

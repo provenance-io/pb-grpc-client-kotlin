@@ -15,7 +15,11 @@ import io.provenance.client.internal.extensions.toCoin
  * @param limit The estimated gas limit.
  * @param feesCalculated A list of [CoinOuterClass.Coin].
  */
-data class GasEstimate(val limit: Long, val feesCalculated: List<CoinOuterClass.Coin> = emptyList()) {
+data class GasEstimate(
+    val limit: Long,
+    val feesCalculated: List<CoinOuterClass.Coin> = emptyList(),
+    val msgFees: List<CoinOuterClass.Coin> = emptyList()
+) {
     companion object {
         const val DEFAULT_FEE_ADJUSTMENT = 1.25
 
