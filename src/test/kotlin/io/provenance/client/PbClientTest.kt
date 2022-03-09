@@ -15,7 +15,6 @@ import kotlin.test.assertTrue
 @Ignore
 // @OptIn(TestnetFeaturePreview::class)
 class PbClientTest {
-
     val pbClient = PbClient(
         chainId = "chain-local",
         channelUri = URI("http://localhost:9090"),
@@ -42,7 +41,7 @@ class PbClientTest {
      */
     fun testClientTxn() {
         val mnemonic = "your 20 word phrase here" // todo use your own mnemonic
-        val walletSigner = fromMnemonic(NetworkType.TESTNET, mnemonic)
+        val walletSigner = fromMnemonic(NetworkType("tp", "m/44'/1'/0'/0'/0'"), mnemonic)
         val txn: TxOuterClass.TxBody = TxOuterClass.TxBody.getDefaultInstance() // todo create your own txn
 
         pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(walletSigner)))
