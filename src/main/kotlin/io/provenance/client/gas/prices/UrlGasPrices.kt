@@ -2,6 +2,7 @@ package io.provenance.client.gas.prices
 
 import com.google.gson.Gson
 import cosmos.base.v1beta1.CoinOuterClass
+import io.provenance.client.internal.extensions.toCoin
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
 import java.io.InputStreamReader
@@ -13,11 +14,8 @@ open class UrlGasPrices(private val uri: String) : GasPrices {
     private val client = HttpClientBuilder.create().build()
     private val gson = Gson().newBuilder().create()
 
-    private data class GasPrice(val gasPrice: Int, val gasPriceDenom: String) {
-        fun toCoin(): CoinOuterClass.Coin = CoinOuterClass.Coin.newBuilder()
-            .setAmount(gasPrice.toString())
-            .setDenom(gasPriceDenom)
-            .build()
+    private data class GasPrice(val gasPrice: Long, val gasPriceDenom: String) {
+        fun toCoin(): CoinOuterClass.Coin = "$gasPrice$gasPriceDenom".toCoin()
     }
 
     override fun invoke(): CoinOuterClass.Coin {
