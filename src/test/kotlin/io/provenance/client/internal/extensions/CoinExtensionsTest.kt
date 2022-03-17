@@ -52,4 +52,28 @@ class CoinExtensionsTest {
         val newCoin = coin * factor
         Assert.assertNotEquals(3e24.toBigDecimal().toPlainString(), newCoin.amount)
     }
+
+    @Test
+    fun testListCoinDiscreteSum() {
+        val listDiff = listOf("1000foo", "1000bar", "1000baz").map { it.toCoin() }
+        val dsDiff = listDiff.discreteSum()
+        val expectDiff = listOf("1000bar", "1000baz", "1000foo").map { it.toCoin() }
+
+        // Different coins should come out the same.
+        Assert.assertEquals(expectDiff, dsDiff)
+
+        val listSame = listOf("1000foo", "1000foo", "1000foo").map { it.toCoin() }
+        val dsSame = listSame.discreteSum()
+        val expectSame = listOf("3000foo".toCoin())
+
+        // Same coins should sum
+        Assert.assertEquals(expectSame, dsSame)
+
+        val listMixed = listOf("1000foo", "1000bar", "1000foo", "1000bar").map { it.toCoin() }
+        val dsMixed = listMixed.discreteSum()
+        val expectMixed = listOf("2000bar", "2000foo").map { it.toCoin() }
+
+        // Mixed coins should sum and be ordered by denom
+        Assert.assertEquals(expectMixed, dsMixed)
+    }
 }
