@@ -29,9 +29,13 @@ open class PbClient(
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
 
+    companion object {
+        private val SECURE_URL_SCHEMES = listOf("https", "grpcs")
+    }
+
     val channel = NettyChannelBuilder.forAddress(channelUri.host, channelUri.port)
         .apply {
-            if (channelUri.scheme == "grpcs") {
+            if (channelUri.scheme in SECURE_URL_SCHEMES) {
                 useTransportSecurity()
             } else {
                 usePlaintext()
