@@ -3,7 +3,6 @@ package io.provenance.client.grpc
 import com.google.protobuf.Any
 import com.google.protobuf.ByteString
 import cosmos.auth.v1beta1.Auth
-import cosmos.base.v1beta1.CoinOuterClass
 import cosmos.crypto.secp256k1.Keys
 import cosmos.tx.signing.v1beta1.Signing.SignMode
 import cosmos.tx.v1beta1.TxOuterClass.AuthInfo
@@ -14,7 +13,6 @@ import cosmos.tx.v1beta1.TxOuterClass.SignDoc
 import cosmos.tx.v1beta1.TxOuterClass.SignerInfo
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.provenance.client.internal.extensions.discreteSum
-import io.provenance.client.internal.extensions.toCoin
 
 interface Signer {
     fun address(): String
