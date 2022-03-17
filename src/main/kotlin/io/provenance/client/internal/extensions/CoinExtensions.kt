@@ -30,3 +30,9 @@ internal operator fun CoinOuterClass.Coin.times(other: BigDecimal): CoinOuterCla
         .setAmount(amount.toBigDecimal().times(other).toPlainString())
         .build()
 }
+
+internal fun List<CoinOuterClass.Coin>.discreteSum(): List<CoinOuterClass.Coin> =
+    groupBy { it.denom }
+        .toSortedMap()
+        .map { it.key to it.value.sumOf { it.amount.toBigInteger() } }
+        .map { "${it.second}${it.first}".toCoin() }

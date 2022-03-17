@@ -12,6 +12,7 @@ import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
 import cosmos.tx.v1beta1.TxOuterClass.SignDoc
 import cosmos.tx.v1beta1.TxOuterClass.SignerInfo
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
+import io.provenance.client.internal.extensions.discreteSum
 
 interface Signer {
     fun address(): String
@@ -37,7 +38,7 @@ data class BaseReq(
         AuthInfo.newBuilder()
             .setFee(
                 Fee.newBuilder()
-                    .addAllAmount(gasEstimate.feesCalculated)
+                    .addAllAmount(gasEstimate.feesCalculated.discreteSum())
                     .setGasLimit(gasEstimate.limit)
                     .also {
                         if (feeGranter != null) {
