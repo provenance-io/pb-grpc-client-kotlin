@@ -34,7 +34,7 @@ java {
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Versions {
-    val ProvenanceProtos = "1.8.0-rc7"
+    val ProvenanceProtos = "1.8.0"
     val ProvenanceHDWallet = "0.1.15"
     val BouncyCastle = "1.70"
     val Grpc = "1.44.0"
