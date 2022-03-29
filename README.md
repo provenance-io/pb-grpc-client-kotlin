@@ -1,4 +1,4 @@
-# GRPC client for the Provenance Blockchain
+# gRPC client for the Provenance Blockchain
 
 **Tip**: Refer to the [Cosmos Proto Docs](https://docs.cosmos.network/master/core/proto-docs.html) and
 [Provenance Blockchain Proto Docs](https://github.com/provenance-io/provenance/blob/main/docs/proto-docs.md) for
@@ -37,33 +37,36 @@ implementation("io.provenance.client:pb-grpc-client-kotlin:${version}")
 ## Setup
 
 Setup the client by supplying:
-- the chain id (e.g. `pio-testnet-1`)
-- the URI of the node to which you are connecting (default port is `9090`)
+- the chain ID (e.g. `pio-testnet-1`, `chain-local`, etc.)
+- the URI of the node to which you are connecting (the default port is `9090`)
 - the gas estimation method
-  - for pbc version 1.8 or higher use `MSG_FEE_CALCULATION`
-  - for pbc version 1.7 or lower use `COSMOS_SIMULATION`
+  - for pbc version 1.8 or higher, use `GasEstimationMethod.MSG_FEE_CALCULATION`
+  - for pbc version 1.7 or lower, use `GasEstimationMethod.COSMOS_SIMULATION`
 
-Example: for a locally running testnet instance:
+### Examples
+
+#### Connect to a locally running testnet instance
+
 ```kotlin
-// pbc version 1.8 or higher
+// pbc version 1.8 or higher:
 val pbClient = PbClient(
-    "chain-local", 
-    URI("http://localhost:9090"),
-    GasEstimationMethod.MSG_FEE_CALCULATION
+    chainId = "chain-local",
+    channelUri = URI("http://localhost:9090"),
+    gasEstimationMethod = GasEstimationMethod.MSG_FEE_CALCULATION
 )
 
-// pbc version 1.7 or lower
+// pbc version 1.7 or lower:
 val pbClient = PbClient(
-    "chain-local", 
-    URI("http://localhost:9090"),
-    GasEstimationMethod.COSMOS_SIMULATION
+    chainId = "chain-local",
+    channelUri = URI("http://localhost:9090"),
+    gasEstimationMethod = GasEstimationMethod.COSMOS_SIMULATION
 )
 ```
 
-Optionally configure GRPC by also passing `ChannelOpts` or a `NettyChannelBuilder`.
+#### Set client idle timeout to 1 minute
 
-Example: Set client idle timeout to 1 minute
 ```kotlin
+// Optionally configure GRPC by also passing `ChannelOpts` or a `NettyChannelBuilder`:
 val pbClient = PbClient(
     chainId = "chain-local",
     channelUri = URI("http://localhost:9090"),
@@ -72,29 +75,74 @@ val pbClient = PbClient(
 )
 ```
 
+## Protobuf Bindings
+
+[Java](https://search.maven.org/artifact/io.provenance/proto-java) and [Kotlin](https://search.maven.org/artifact/io.provenance/proto-kotlin) Protobuf bindings [(source)](https://github.com/provenance-io/provenance/tree/main/protoBindings) for the Provenance Blockchain are available on Maven Central.
+These modules provide the type definitions needed to interact with the blockchain in code.
+
+Refer to the [Cosmos Proto Docs](https://docs.cosmos.network/master/core/proto-docs.html) and
+[Provenance Blockchain Proto Docs](https://github.com/provenance-io/provenance/blob/main/docs/proto-docs.md) for
+an in-depth look at the client interface definitions.
+
+### Extended functionality
+
+Beyond definitions, a number of useful [extension methods](https://github.com/provenance-io/provenance/tree/main/protoBindings/bindings/kotlin/src/main/kotlin/io/provenance/client/protobuf) are provided in the `io.provenance.client.protobuf.extensions` package
+that provide higher-level functionality for Kotlin types.
+
 ## Query Usage
 
 `PBClient` contains individual clients for each Cosmos and Provenance Blockchain SDK query service. Each module contains a `query.proto`, which 
 defines the query interface.
 
-Example: Querying the `marker` module for the access permissions on a marker:
+### Examples
 
-[Marker module query interface](https://github.com/provenance-io/provenance/blob/main/proto/provenance/marker/v1/query.proto)
+#### Querying the `marker` module for the access permissions on a marker
 
 ```kotlin
 pbClient.markerClient.access(QueryAccessRequest.newBuilder().setId("marker address or denom here").build())
 ```
 
+See [Marker module query interface](https://github.com/provenance-io/provenance/blob/main/proto/provenance/marker/v1/query.proto).
+
 ## Transaction Usage
 
-### Example: creating a `Marker`
+### Examples
+
+#### Creating a `Marker`
 
 ```kotlin
-val mnemonic = "your 20 word phrase here" // todo use your own mnemonic
-val walletSigner = WalletSigner(NetworkType.TESTNET, mnemonic)
-val signers = listOf(BaseReqSigner(walletSigner))
+val wallet: Signer = TODO()
 
-val msgAddMarkerRequest: MsgAddMarkerRequest = // Your request here
+val signers: List<BaseReqSigner> = listOf(BaseReqSigner(wallet))
+
+val msgAddMarkerRequest: MsgAddMarkerRequest = MsgAddMarkerRequest
+    .newBuilder()
+    .setAmount(CoinOuterClass.Coin.newBuilder()
+        .setAmount("100000000000")
+        .setDenom("nhash")
+    )
+    .setManager(wallet.address().value)
+    .setFromAddress(wallet.address().value)
+    .setMarkerType(MarkerType.MARKER_TYPE_COIN)
+    .setStatus(MarkerStatus.MARKER_STATUS_PROPOSED)
+    .addAllAccessList(
+        listOf(
+            AccessGrant.newBuilder()
+                .setAddress(wallet.address().value)
+                .addAllPermissions(
+                    listOf(
+                        Access.ACCESS_ADMIN,
+                        Access.ACCESS_BURN,
+                        Access.ACCESS_MINT,
+                        Access.ACCESS_DEPOSIT,
+                        Access.ACCESS_WITHDRAW,
+                        Access.ACCESS_DELETE,
+                    )
+                )
+                .build()
+        )
+    )
+    .build()
 
 val txn = TxOuterClass.TxBody.newBuilder()
     .addMessages(Any.pack(message = msgAddMarkerRequest, typeUrlPrefix = ""))
@@ -103,7 +151,7 @@ val txn = TxOuterClass.TxBody.newBuilder()
 pbClient.estimateAndBroadcastTx(
     txBody = txn,
     signers = signers,
-    mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK,
+    mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK,  // DEPRECATED. See note below
     gasAdjustment = 1.5
 )
 ```
@@ -112,7 +160,11 @@ pbClient.estimateAndBroadcastTx(
 client blocks while waiting for the response. Instead use `BROADCAST_MODE_SYNC`, and listen for transaction success
 in the [Event Stream](https://github.com/provenance-io/event-stream) or query the client with the transaction hash to find the outcome of submission.
 
-### Example: using an existing wallet created with [hdwallet](https://github.com/provenance-io/hdwallet/)
+You can read about the various broadcast modes supported [here](https://docs.cosmos.network/master/run-node/txs.html#broadcasting-a-transaction) and [here](https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/tx/v1beta1/service.proto#L85).
+
+## Code sample
+
+#### Using an existing wallet created with [hdwallet](https://github.com/provenance-io/hdwallet/) to send hash from one address to another
 
 ```kotlin
 import com.google.protobuf.Any
