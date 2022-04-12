@@ -12,6 +12,7 @@ import cosmos.tx.v1beta1.TxOuterClass.ModeInfo.Single
 import cosmos.tx.v1beta1.TxOuterClass.SignDoc
 import cosmos.tx.v1beta1.TxOuterClass.SignerInfo
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
+import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.common.extensions.discreteSum
 
 interface Signer {

@@ -1,7 +1,7 @@
-package io.provenance.client.gas
+package io.provenance.client.common.gas
 
 import cosmos.base.v1beta1.CoinOuterClass
-import io.provenance.client.internal.extensions.toCoin
+import io.provenance.client.common.extensions.toCoin
 
 /**
  *

@@ -7,19 +7,14 @@ import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.grpc.BaseReq
 import io.provenance.client.grpc.BaseReqSigner
-import io.provenance.client.grpc.GasEstimate
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -35,7 +30,7 @@ data class ChannelOpts(
 open class PbCoroutinesClient(
     val chainId: String,
     val channelUri: URI,
-    val gasEstimationMethod: PbGasEstimator,
+    val gasEstimationMethod: GasEstimator,
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
@@ -123,15 +118,14 @@ open class PbCoroutinesClient(
             authInfo = baseReq.buildAuthInfo()
         }
 
-        return baseReq.buildSignDocBytesList(tx.authInfo.toByteString(), tx.body.toByteString())
+        val signatures = baseReq.buildSignDocBytesList(tx.authInfo.toByteString(), tx.body.toByteString())
             .mapIndexed { index, signDocBytes ->
                 baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
-            }.let { signatures ->
-                val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
-                val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
-                val gasEstimator = gasEstimationMethod(this)
-                gasEstimator(signedTx, gasAdjustment)
             }
+
+        val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
+        val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
+        return gasEstimationMethod(this, signedTx, gasAdjustment)
     }
 
     private fun buildTx(
@@ -195,29 +189,3 @@ suspend fun QueryGrpcKt.QueryCoroutineStub.getBaseAccount(bech32Address: String)
             else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
         }
     }
-
-/**
- * Unused
- */
-suspend fun <T> suspendable(block: () -> T): T {
-    return suspendCoroutine { continuation ->
-        thread {
-            try {
-                val result = block()
-                continuation.resume(result)
-            } catch (e: Throwable) {
-                continuation.resumeWithException(e)
-            }
-        }
-    }
-}
-
-/**
- * Unused
- */
-suspend fun <T> Future<T>.suspendable(timeout: Duration = Duration.ZERO): T {
-    return suspendable {
-        if (timeout == Duration.ZERO) get()
-        else get(timeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-    }
-}

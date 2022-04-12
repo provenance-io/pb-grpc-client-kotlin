@@ -1,4 +1,4 @@
-package io.provenance.extensions
+package io.provenance.client.common.extensions
 
 import cosmos.base.v1beta1.CoinOuterClass
 import java.math.BigDecimal

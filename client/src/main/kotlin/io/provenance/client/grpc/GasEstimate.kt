@@ -1,32 +1,12 @@
 package io.provenance.client.grpc
 
-import cosmos.base.v1beta1.CoinOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
+import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.gas.estimators.MsgFeeCalculationGasEstimator
 import io.provenance.client.gas.estimators.cosmosSimulationGasEstimator
 import io.provenance.client.gas.estimators.floatingGasPriceGasEstimator
-import io.provenance.client.gas.prices.GasPrices
-import io.provenance.client.internal.extensions.toCoin
-
-/**
- * The gas estimate implementation
- *
- * @param limit The estimated gas limit.
- * @param feesCalculated A list of [CoinOuterClass.Coin].
- */
-data class GasEstimate(
-    val limit: Long,
-    val feesCalculated: List<CoinOuterClass.Coin> = emptyList(),
-    val msgFees: List<CoinOuterClass.Coin> = emptyList()
-) {
-    companion object {
-        const val DEFAULT_FEE_ADJUSTMENT = 1.25
-
-        // TODO - Remove once mainnet.version > 1.8
-        @Deprecated("do not use")
-        const val DEFAULT_GAS_PRICE = 1905.00
-    }
-}
+import io.provenance.client.common.extensions.toCoin
+import io.provenance.client.common.gas.prices.GasPrices
 
 /**
  * [GasEstimator] is an alias to standardize how gas estimations are made.
@@ -34,12 +14,19 @@ data class GasEstimate(
  * @param adj The gas adjustment being applied.
  * @return Gas estimates.
  */
-typealias GasEstimator = (tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate
+typealias GasEstimator = PbClient.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate
 
 /**
- * Wrapper alias for estimation methods to allow scoping of pbClient GRPC methods into the estimation.
+ *
  */
 typealias PbGasEstimator = AbstractPbClient<*>.() -> GasEstimator
+
+/**
+ *
+ */
+fun gasEstimator(block: PbClient.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate): GasEstimator {
+    return { tx: TxOuterClass.Tx, adjustment: Double -> block(tx, adjustment) }
+}
 
 /**
  * A set of flags used to specify how gas should be estimated
@@ -51,13 +38,13 @@ object GasEstimationMethod {
     /**
      * A flag for cosmos simulation gas estimation. Must be used when interacting with pbc 1.7 or lower.
      */
-    val COSMOS_SIMULATION: PbGasEstimator = cosmosSimulationGasEstimator { GasEstimate.DEFAULT_GAS_PRICE.toCoin("nhash") }
+    val COSMOS_SIMULATION: GasEstimator = cosmosSimulationGasEstimator { GasEstimate.DEFAULT_GAS_PRICE.toCoin("nhash") }
 
     /**
      * A flag for message fee endpoint gas estimation. Only compatible and should be used with pbc 1.8 or greater.
      */
     // @TestnetFeaturePreview
-    val MSG_FEE_CALCULATION: PbGasEstimator = MsgFeeCalculationGasEstimator
+    val MSG_FEE_CALCULATION: GasEstimator = MsgFeeCalculationGasEstimator
 }
 
 /**
@@ -81,7 +68,7 @@ object GasEstimationMethod {
  *
  * @param delegate The underlying estimation calculation methods to use.
  * @param gasPrices The current gas price supplier.
- * @return [PbGasEstimator]
+ * @return [GasEstimator]
  */
-fun floatingGasPrices(delegate: PbGasEstimator, gasPrices: GasPrices): PbGasEstimator =
+fun floatingGasPrices(delegate: GasEstimator, gasPrices: GasPrices): GasEstimator =
     floatingGasPriceGasEstimator(delegate, gasPrices)

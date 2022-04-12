@@ -175,9 +175,9 @@ import cosmos.bank.v1beta1.Tx
 import cosmos.base.v1beta1.CoinOuterClass
 import cosmos.crypto.secp256k1.Keys
 import cosmos.tx.v1beta1.TxOuterClass
-import io.provenance.client.grpc.BaseReqSigner
-import io.provenance.client.grpc.Signer
-import io.provenance.client.wallet.NetworkType
+import BaseReqSigner
+import Signer
+import NetworkType
 import io.provenance.hdwallet.bip39.MnemonicWords
 import io.provenance.hdwallet.wallet.Account
 import io.provenance.hdwallet.wallet.Wallet

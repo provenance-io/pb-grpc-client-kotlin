@@ -20,8 +20,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    // For KEthereum library
-    maven(url = "https://jitpack.io")
 }
 
 java {
@@ -33,18 +31,7 @@ java {
 
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
-object Versions {
-    val ProvenanceProtos = "1.8.0"
-    val ProvenanceHDWallet = "0.1.15"
-    val BouncyCastle = "1.70"
-    val Grpc = "1.44.0"
-    val Kotlin = "1.6.10"
-}
-
 dependencies {
-    // https://mvnrepository.com/artifact/io.provenance/proto-kotlin
-    implementation("io.provenance:proto-kotlin:${Versions.ProvenanceProtos}")
-
     // Kotlin
     // Pin kotlin packages together on a common version:
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:${Versions.Kotlin}"))
@@ -52,14 +39,12 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    // Provenance
-    implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
-
     // Grpc
     implementation("io.grpc:grpc-alts:${Versions.Grpc}")
     implementation("io.grpc:grpc-netty:${Versions.Grpc}")
     implementation("io.grpc:grpc-protobuf:${Versions.Grpc}")
     implementation("io.grpc:grpc-stub:${Versions.Grpc}")
+
     // Crypto
     implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
 

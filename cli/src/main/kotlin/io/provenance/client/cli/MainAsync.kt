@@ -1,59 +1,28 @@
 package io.provenance.client.cli
 
-import com.google.protobuf.Any
-import com.google.protobuf.Message
-import com.google.protobuf.util.JsonFormat
 import cosmos.bank.v1beta1.Tx
-import cosmos.tx.v1beta1.TxOuterClass
-import io.provenance.client.async.GasEstimationMethodAsync
-import io.provenance.client.async.PbAsyncClient
-import io.provenance.client.async.cached
-import io.provenance.client.async.floatingGasPricesAsync
-import io.provenance.client.async.urlGasPricesAsync
-import io.provenance.client.async.withFallbackPrice
-import io.provenance.client.gas.prices.cached
-import io.provenance.client.gas.prices.urlGasPrices
-import io.provenance.client.gas.prices.withFallbackPrice
+import io.provenance.client.common.extensions.toCoin
+import io.provenance.client.common.gas.GasEstimate
+import io.provenance.client.coroutines.GasEstimationMethod
+import io.provenance.client.coroutines.PbCoroutinesClient
+import io.provenance.client.coroutines.floatingGasPrices
+import io.provenance.client.coroutines.gas.prices.cached
+import io.provenance.client.coroutines.gas.prices.urlGasPrices
+import io.provenance.client.coroutines.gas.prices.withFallbackPrice
 import io.provenance.client.grpc.BaseReqSigner
-import io.provenance.client.grpc.GasEstimate
-import io.provenance.client.grpc.GasEstimationMethod
-import io.provenance.client.grpc.PbClient
-import io.provenance.client.grpc.floatingGasPrices
-import io.provenance.client.internal.extensions.toCoin
-import io.provenance.client.wallet.NetworkType
 import io.provenance.client.wallet.fromMnemonic
-import io.provenance.name.v1.MsgBindNameRequest
-import io.provenance.name.v1.NameRecord
 import io.provenance.name.v1.QueryResolveRequest
 import kotlinx.coroutines.runBlocking
 import java.net.URI
-import java.util.Base64
 
-val networkType = NetworkType("tp", "m/44'/1'/0'/0'/0'")
-
-fun main1() {
-    val coin = "99redballoons".toCoin()
-    println(JsonFormat.printer().print(coin))
-
-
-    val t = "CokBCoYBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmYKKXRwMXQ0ZnZuejgzbmdrdWFqOHljeWNhOHlwazVtNHN6Mm1qMDU1cjJhEil0cDE5Zm41bWxudHl4YWZ1Z2V0YzhseXp6cmU2bm55cXNxOTU0NDlndBoOCgVuaGFzaBIFMTAwMDASaApRCkYKHy9jb3Ntb3MuY3J5cHRvLnNlY3AyNTZrMS5QdWJLZXkSIwohAvJMlSkB8nDAAM3YLQDUzq7y4YCYokXGjq6yRWij/QPjEgQKAggBGP0fEhMKDQoFbmhhc2gSBDUwMDAQwJoMGkBEDtGfsCxnvrEC/sabZOdC+Ockkn9Leq6mEQNLObKqpzepYISvfDPtWHt7H1Q5sFG/HNAI0Me3hfUnRPqnHFEP"
-    val parser: (ByteArray) -> Message = { TxOuterClass.TxBody.parseFrom(it) }
-
-    val decoded = Base64.getDecoder().decode(t)
-    println(decoded.toList().map { it.toInt().toChar() })
-
-    val tx = parser(decoded)
-    println(tx)
-}
-
-fun main() {
+fun main() = runBlocking {
     // GasEstimationMethod.COSMOS_SIMULATION used only if pbc version is 1.7 or lower
     val priceGetter = urlGasPrices("https://test.figure.tech/figure-gas-price")
         .cached()
         .withFallbackPrice(GasEstimate.DEFAULT_GAS_PRICE.toCoin("nhash"))
 
     val estimator = floatingGasPrices(GasEstimationMethod.MSG_FEE_CALCULATION, priceGetter)
-    val pbClient = PbClient(
+    val pbClient = PbCoroutinesClient(
         chainId = "pio-testnet-1",
         channelUri = URI("grpcs://grpc.test.provenance.io"),
         gasEstimationMethod = estimator
@@ -67,7 +36,7 @@ fun main() {
  *
  * Example only... real values are needed to run this example
  */
-fun PbClient.testClientTxn() {
+suspend fun PbCoroutinesClient.testClientTxn() {
     val mnemonic = "fly fly comfort" // todo use your own mnemonic
     val walletSigner = fromMnemonic(networkType, mnemonic)
     val addr = nameClient.resolve(QueryResolveRequest.newBuilder().setName("pb").build())
@@ -100,10 +69,3 @@ fun PbClient.testClientTxn() {
     val response = broadcastTx(baseReq, estimate)
     println(response)
 }
-
-fun Message.toAny(): Any = Any.pack(this, "")
-
-fun List<Message>.toTxBody() = TxOuterClass.TxBody
-    .newBuilder()
-    .addAllMessages(map { it.toAny() })
-    .build()

@@ -8,3 +8,8 @@
  */
 
 rootProject.name = "pb-grpc-client-kotlin"
+
+include("client-common")
+include("client")
+include("client-coroutines")
+include("cli")
