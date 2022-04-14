@@ -2,7 +2,6 @@ package io.provenance.client.grpc
 
 import cosmos.base.v1beta1.CoinOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
-// import io.provenance.client.TestnetFeaturePreview
 import io.provenance.client.gas.estimators.MsgFeeCalculationGasEstimator
 import io.provenance.client.gas.estimators.cosmosSimulationGasEstimator
 import io.provenance.client.gas.estimators.floatingGasPriceGasEstimator
