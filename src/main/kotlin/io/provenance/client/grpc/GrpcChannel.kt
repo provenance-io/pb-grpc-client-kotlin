@@ -18,6 +18,7 @@ val SECURE_URL_SCHEMES = listOf("https", "grpcs", "tcp+tls")
  * @param idleTimeout See [ManagedChannelBuilder.idleTimeout]
  * @param keepAliveTime See [ManagedChannelBuilder.keepAliveTime]
  * @param keepAliveTimeout See [ManagedChannelBuilder.keepAliveTimeout]
+ * @param shutdownWait See [ManagedChannel.awaitTermination]
  * @param executor See [ManagedChannelBuilder.executor]
  */
 data class ChannelOpts(
