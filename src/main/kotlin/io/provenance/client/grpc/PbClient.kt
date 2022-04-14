@@ -4,54 +4,36 @@ import com.google.protobuf.ByteString
 import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
+import io.grpc.Channel
+import io.grpc.ManagedChannel
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.msgfees.v1.QueryParamsRequest
 import java.io.Closeable
 import java.net.URI
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-data class ChannelOpts(
-    val inboundMessageSize: Int = 40 * 1024 * 1024, // ~ 20 MB
-    val idleTimeout: Pair<Long, TimeUnit> = 5L to TimeUnit.MINUTES,
-    val keepAliveTime: Pair<Long, TimeUnit> = 60L to TimeUnit.SECONDS, // ~ 12 pbc block cuts
-    val keepAliveTimeout: Pair<Long, TimeUnit> = 20L to TimeUnit.SECONDS,
-    val executor: ExecutorService = Executors.newFixedThreadPool(8)
-)
+fun nodeFloorGasPrice(channel: Channel) = io.provenance.msgfees.v1.QueryGrpc.newBlockingStub(channel)
+    .params(QueryParamsRequest.getDefaultInstance())
+    .params
+    .floorGasPrice
 
 open class PbClient(
     val chainId: String,
     val channelUri: URI,
     val gasEstimationMethod: PbGasEstimator,
     opts: ChannelOpts = ChannelOpts(),
-    channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
+    channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
+    channel: ManagedChannel = grpcChannel(channelUri, opts, NettyChannelBuilder::forAddress, channelConfigLambda)
 ) : Closeable {
 
-    companion object {
-        private val SECURE_URL_SCHEMES = listOf("https", "grpcs")
-    }
-
-    val channel = NettyChannelBuilder.forAddress(channelUri.host, channelUri.port)
-        .apply {
-            if (channelUri.scheme in SECURE_URL_SCHEMES) {
-                useTransportSecurity()
-            } else {
-                usePlaintext()
-            }
-        }
-        .executor(opts.executor)
-        .maxInboundMessageSize(opts.inboundMessageSize)
-        .idleTimeout(opts.idleTimeout.first, opts.idleTimeout.second)
-        .keepAliveTime(opts.keepAliveTime.first, opts.keepAliveTime.second)
-        .keepAliveTimeout(opts.keepAliveTimeout.first, opts.keepAliveTimeout.second)
-        .also { builder -> channelConfigLambda(builder) }
-        .build()
-
-    override fun close() {
+    // Graceful shutdown of the grpc managed channel.
+    private val channelClose: () -> Unit = {
         channel.shutdown()
+        channel.awaitTermination(opts.shutdownWait.inWholeMilliseconds, TimeUnit.MILLISECONDS)
     }
+
+    override fun close() = channelClose()
 
     // Service clients
     val cosmosService = cosmos.tx.v1beta1.ServiceGrpc.newBlockingStub(channel)
