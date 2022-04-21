@@ -1,5 +1,27 @@
 {
   "extends": [
     "config:base"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["docker-compose", "dockerfile", "github-actions"],
+      "schedule": ["before 3am on the first day of the month"]
+    },
+    {
+      "matchManagers": ["gradle", "gradle-wrapper"],
+      "schedule": ["every weekend"]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["MINOR-UPDATE"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["MAJOR-UPDATE"]
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["PATCH-UPDATE"]
+    }
   ]
 }
