@@ -39,7 +39,7 @@ typealias GasEstimator = (tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimat
 /**
  * Wrapper alias for estimation methods to allow scoping of pbClient GRPC methods into the estimation.
  */
-typealias PbGasEstimator = PbClient.() -> GasEstimator
+typealias PbGasEstimator = AbstractPbClient<*>.() -> GasEstimator
 
 /**
  * A set of flags used to specify how gas should be estimated
