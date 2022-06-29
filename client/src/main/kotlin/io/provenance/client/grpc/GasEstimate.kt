@@ -14,7 +14,7 @@ import io.provenance.client.common.gas.prices.GasPrices
  * @param adj The gas adjustment being applied.
  * @return Gas estimates.
  */
-typealias GasEstimator = PbClient.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate
+typealias GasEstimator = AbstractPbClient<*>.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate
 
 /**
  *
@@ -24,7 +24,7 @@ typealias PbGasEstimator = AbstractPbClient<*>.() -> GasEstimator
 /**
  *
  */
-fun gasEstimator(block: PbClient.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate): GasEstimator {
+fun gasEstimator(block: AbstractPbClient<*>.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate): GasEstimator {
     return { tx: TxOuterClass.Tx, adjustment: Double -> block(tx, adjustment) }
 }
 

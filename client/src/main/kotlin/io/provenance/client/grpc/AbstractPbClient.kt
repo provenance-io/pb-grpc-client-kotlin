@@ -9,6 +9,7 @@ import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
 import io.grpc.stub.AbstractStub
 import io.grpc.stub.MetadataUtils
+import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.msgfees.v1.QueryParamsRequest
 import java.io.Closeable
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit
 open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     open val chainId: String,
     open val channelUri: URI,
-    open val gasEstimationMethod: PbGasEstimator,
+    open val gasEstimationMethod: GasEstimator,
     open val fromAddress: (String, Int) -> T,
     opts: ChannelOpts = ChannelOpts(),
     channel: ManagedChannel,
@@ -106,8 +107,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
             }.let { signatures ->
                 val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
                 val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
-                val gasEstimator = gasEstimationMethod()
-                gasEstimator(signedTx, gasAdjustment)
+                gasEstimationMethod(signedTx, gasAdjustment)
             }
     }
 

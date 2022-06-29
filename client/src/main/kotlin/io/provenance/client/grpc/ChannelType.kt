@@ -1,7 +1,7 @@
-package io.provenance.client.grpc.channel
+package io.provenance.client.grpc
 
 import io.grpc.ManagedChannelBuilder
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.grpc.netty.NettyChannelBuilder
 
 /**
  *

@@ -1,19 +1,13 @@
 package io.provenance.client.grpc
 
 import io.grpc.ManagedChannel
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
-import io.provenance.client.grpc.channel.NETTY_CHANNEL
-import com.google.protobuf.ByteString
-import cosmos.tx.v1beta1.ServiceOuterClass
-import cosmos.tx.v1beta1.TxOuterClass
-import cosmos.tx.v1beta1.TxOuterClass.TxBody
-import io.grpc.ManagedChannel
 import io.grpc.netty.NettyChannelBuilder
-import io.provenance.client.common.gas.GasEstimate
-import io.provenance.client.protobuf.extensions.getBaseAccount
-import io.provenance.msgfees.v1.QueryParamsRequest
-import java.io.Closeable
 import java.net.URI
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  *
@@ -21,7 +15,7 @@ import java.net.URI
 fun nettyPbClient(
     chainId: String,
     channelUri: URI,
-    gasEstimationMethod: PbGasEstimator,
+    gasEstimationMethod: GasEstimator,
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
     channel: ManagedChannel = grpcChannel(channelUri, opts, NETTY_CHANNEL, channelConfigLambda),
@@ -52,7 +46,8 @@ data class ChannelOpts(
     val idleTimeout: Pair<Long, TimeUnit> = 5L to TimeUnit.MINUTES,
     val keepAliveTime: Pair<Long, TimeUnit> = 60L to TimeUnit.SECONDS, // ~ 12 pbc block cuts
     val keepAliveTimeout: Pair<Long, TimeUnit> = 20L to TimeUnit.SECONDS,
-    val executor: ExecutorService = Executors.newFixedThreadPool(8)
+    val executor: ExecutorService = Executors.newFixedThreadPool(8),
+    val shutdownWait: Duration = 10.seconds
 )
 
 /**
@@ -61,7 +56,7 @@ data class ChannelOpts(
 open class PbClient(
     override val chainId: String,
     override val channelUri: URI,
-    override val gasEstimationMethod: PbGasEstimator,
+    override val gasEstimationMethod: GasEstimator,
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
     channel: ManagedChannel = grpcChannel(channelUri, opts, NETTY_CHANNEL, channelConfigLambda),
