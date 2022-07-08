@@ -1,0 +1,23 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["gradle", "gradle-wrapper"],
+      "schedule": ["every weekend"]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["MINOR-UPDATE"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["MAJOR-UPDATE"]
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["PATCH-UPDATE"]
+    }
+  ]
+}
