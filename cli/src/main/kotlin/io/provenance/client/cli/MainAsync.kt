@@ -12,8 +12,13 @@ import io.provenance.client.coroutines.gas.prices.withFallbackPrice
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.wallet.fromMnemonic
 import io.provenance.name.v1.QueryResolveRequest
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.net.URI
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 fun main() = runBlocking {
     // GasEstimationMethod.COSMOS_SIMULATION used only if pbc version is 1.7 or lower
@@ -29,6 +34,7 @@ fun main() = runBlocking {
     )
 
     pbClient.testClientTxn()
+    println("done!")
 }
 
 /**
@@ -36,12 +42,21 @@ fun main() = runBlocking {
  *
  * Example only... real values are needed to run this example
  */
-suspend fun PbCoroutinesClient.testClientTxn() {
+suspend fun PbCoroutinesClient.testClientTxn(coroutineContext: CoroutineContext = EmptyCoroutineContext) {
     val mnemonic = "fly fly comfort" // todo use your own mnemonic
     val walletSigner = fromMnemonic(networkType, mnemonic)
-    val addr = nameClient.resolve(QueryResolveRequest.newBuilder().setName("pb").build())
-    println("addr: ${addr.address}")
-    println("walletAddr:${walletSigner.address()}")
+
+    val addrs = withContext(coroutineContext) {
+        listOf(
+            async { nameClient.resolve(QueryResolveRequest.newBuilder().setName("pb").build()) },
+            async { nameClient.resolve(QueryResolveRequest.newBuilder().setName("provenance").build()) },
+        )
+    }
+
+    addrs.awaitAll().forEach { addr ->
+        println("addr: ${addr.address}")
+        println("walletAddr:${walletSigner.address()}")
+    }
 
     val txn = listOf(
         // MsgBindNameRequest.newBuilder().also {
