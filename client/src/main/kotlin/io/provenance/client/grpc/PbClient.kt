@@ -5,17 +5,6 @@ import io.grpc.netty.NettyChannelBuilder
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-/**
- *
- */
-//fun nettyPbClient(
-//    chainId: String,
-//    channelUri: URI,
-//    gasEstimationMethod: GasEstimator,
-//    opts: ChannelOpts = ChannelOpts(),
-//    channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
-//    channel: ManagedChannel = grpcChannel(channelUri, opts, NETTY_CHANNEL, channelConfigLambda),
-//) = PbClient(chainId, channelUri, gasEstimationMethod, opts, channelConfigLambda, channel)
 
 val SECURE_URL_SCHEMES = listOf("https", "grpcs", "tcp+tls")
 
