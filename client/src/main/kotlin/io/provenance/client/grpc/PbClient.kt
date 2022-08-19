@@ -35,5 +35,5 @@ open class PbClient(
     override val gasEstimationMethod: GasEstimator,
     opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
-    channel: ManagedChannel = grpcChannel(channelUri, opts, channelConfigLambda),
+    channel: ManagedChannel = grpcChannel(channelUri, opts, NettyChannelBuilder::forAddress),
 ) : AbstractPbClient<NettyChannelBuilder>(chainId, channelUri, gasEstimationMethod, NETTY_CHANNEL, opts, channel)

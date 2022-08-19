@@ -40,24 +40,22 @@ data class ChannelOpts(
  * @param init Initial configuration to apply after the [ChannelOpts] are applied.
  * @return The newly created [ManagedChannel]
  */
-fun grpcChannel(
+fun <T: ManagedChannelBuilder<T>> grpcChannel(
     uri: URI,
     opts: ChannelOpts = ChannelOpts(),
-    channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
+    fromAddress: (String, Int) -> T,
+    init: T.() -> Unit = {}
 ): ManagedChannel {
-    return NettyChannelBuilder.forAddress(uri.host, uri.port)
+    return fromAddress(uri.host, uri.port)
         .apply {
-            if (uri.scheme in SECURE_URL_SCHEMES) {
-                useTransportSecurity()
-            } else {
-                usePlaintext()
-            }
+            if (uri.scheme in SECURE_URL_SCHEMES) useTransportSecurity()
+            else usePlaintext()
         }
         .executor(opts.executor)
         .maxInboundMessageSize(opts.inboundMessageSize)
         .idleTimeout(opts.idleTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
         .keepAliveTime(opts.keepAliveTime.inWholeMilliseconds, TimeUnit.MILLISECONDS)
         .keepAliveTimeout(opts.keepAliveTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-        .also { builder -> channelConfigLambda(builder) }
+        .also (init)
         .build()
 }

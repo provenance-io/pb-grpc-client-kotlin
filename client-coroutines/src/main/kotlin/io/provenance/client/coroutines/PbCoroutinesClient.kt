@@ -26,7 +26,7 @@ open class PbCoroutinesClient(
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
 
-    private val channel = grpcChannel(channelUri, opts, channelConfigLambda)
+    private val channel = grpcChannel(channelUri, opts, NettyChannelBuilder::forAddress)
 
     override fun close() {
         channel.shutdown().awaitTermination(10, TimeUnit.SECONDS)
