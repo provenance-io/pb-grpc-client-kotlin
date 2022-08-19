@@ -12,14 +12,13 @@ import io.provenance.client.coroutines.gas.prices.withFallbackPrice
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.wallet.fromMnemonic
 import io.provenance.name.v1.QueryResolveRequest
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.net.URI
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 fun main() = runBlocking {
     // GasEstimationMethod.COSMOS_SIMULATION used only if pbc version is 1.7 or lower
     val priceGetter = urlGasPrices("https://test.figure.tech/figure-gas-price")
@@ -28,12 +27,13 @@ fun main() = runBlocking {
 
     val estimator = floatingGasPrices(GasEstimationMethod.MSG_FEE_CALCULATION, priceGetter)
     val pbClient = PbCoroutinesClient(
-        chainId = "pio-testnet-1",
-        channelUri = URI("grpcs://grpc.test.provenance.io"),
+        chainId = "localnet-main",
+        channelUri = URI("grpc://0.0.0.0:9090"),
         gasEstimationMethod = estimator
     )
 
     pbClient.testClientTxn()
+    pbClient.close()
     println("done!")
 }
 
@@ -48,12 +48,13 @@ suspend fun PbCoroutinesClient.testClientTxn(coroutineContext: CoroutineContext 
 
     val addrs = withContext(coroutineContext) {
         listOf(
-            async { nameClient.resolve(QueryResolveRequest.newBuilder().setName("pb").build()) },
-            async { nameClient.resolve(QueryResolveRequest.newBuilder().setName("provenance").build()) },
+            nameClient.resolve(QueryResolveRequest.newBuilder().setName("pb").build()),
+            nameClient.resolve(QueryResolveRequest.newBuilder().setName("provenance").build()),
         )
     }
+    coroutineContext.cancel()
 
-    addrs.awaitAll().forEach { addr ->
+    val addrObject = addrs.map { addr ->
         println("addr: ${addr.address}")
         println("walletAddr:${walletSigner.address()}")
     }
@@ -71,11 +72,12 @@ suspend fun PbCoroutinesClient.testClientTxn(coroutineContext: CoroutineContext 
         //     it.value = ByteString.copyFrom("test".toByteArray())
         // }.build()
         Tx.MsgSend.newBuilder()
-            .setToAddress("tp1s9c2asqtp4f6r5k4jsg97p5yekqc6rhqqv7vky")
-            .addAmount("100hash".toCoin())
+            .setFromAddress("tp1x4ay2yxn4e6mnnxd76y0ckdglw45pvnhc08p36")
+            .setToAddress("tp1x4ay2yxn4e6mnnxd76y0ckdglw45pvnhc08p36")
+            .addAmount("100000nhash".toCoin())
             .build()
     )
-    val baseReq = baseRequest(txn.toTxBody(), listOf(BaseReqSigner(walletSigner, 31)), 1.0)
+    val baseReq = baseRequest(txn.toTxBody(), listOf(BaseReqSigner(walletSigner, 0)), 1.0)
     val estimate = estimateTx(baseReq)
     println(estimate)
     println("--------------")

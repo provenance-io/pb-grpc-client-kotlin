@@ -9,8 +9,11 @@ repositories {
 
 dependencies {
     // Provenance / Cosmos-SDK protos
-    implementation("io.provenance:proto-kotlin:${Versions.ProvenanceProtos}")
+    implementation(libs.provenance.protos)
+    implementation(libs.grpc.alts)
+    implementation(libs.grpc.netty)
+
 
     // Test
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testImplementation(libs.kotlin.test.junit)
 }

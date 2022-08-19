@@ -2,11 +2,13 @@ package io.provenance.client.grpc
 
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.netty.NettyChannelBuilder
 import java.net.URI
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 val SECURE_URL_SCHEMES = listOf("https", "grpcs", "tcp+tls")
@@ -23,11 +25,10 @@ val SECURE_URL_SCHEMES = listOf("https", "grpcs", "tcp+tls")
  */
 data class ChannelOpts(
     val inboundMessageSize: Int = 40 * 1024 * 1024, // ~ 20 MB
-    val idleTimeout: Pair<Long, TimeUnit> = 5L to TimeUnit.MINUTES,
-    val keepAliveTime: Pair<Long, TimeUnit> = 60L to TimeUnit.SECONDS, // ~ 12 pbc block cuts
-    val keepAliveTimeout: Pair<Long, TimeUnit> = 20L to TimeUnit.SECONDS,
-    val shutdownWait: Duration = 10.seconds,
-    val executor: ExecutorService = Executors.newFixedThreadPool(8)
+    val idleTimeout: Duration = 5.minutes,
+    val keepAliveTime: Duration = 60.seconds, // ~ 12 pbc block cuts
+    val keepAliveTimeout: Duration = 20.seconds,
+    val executor: Executor = Executors.newFixedThreadPool(8)
 )
 
 /**
@@ -39,22 +40,24 @@ data class ChannelOpts(
  * @param init Initial configuration to apply after the [ChannelOpts] are applied.
  * @return The newly created [ManagedChannel]
  */
-fun <T : ManagedChannelBuilder<T>> grpcChannel(
+fun grpcChannel(
     uri: URI,
     opts: ChannelOpts = ChannelOpts(),
-    fromAddress: (String, Int) -> T,
-    init: T.() -> Unit = {}
+    channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ): ManagedChannel {
-    return fromAddress(uri.host, uri.port)
+    return NettyChannelBuilder.forAddress(uri.host, uri.port)
         .apply {
-            if (uri.scheme in SECURE_URL_SCHEMES) useTransportSecurity()
-            else usePlaintext()
+            if (uri.scheme in SECURE_URL_SCHEMES) {
+                useTransportSecurity()
+            } else {
+                usePlaintext()
+            }
         }
         .executor(opts.executor)
         .maxInboundMessageSize(opts.inboundMessageSize)
-        .idleTimeout(opts.idleTimeout.first, opts.idleTimeout.second)
-        .keepAliveTime(opts.keepAliveTime.first, opts.keepAliveTime.second)
-        .keepAliveTimeout(opts.keepAliveTimeout.first, opts.keepAliveTimeout.second)
-        .also(init)
+        .idleTimeout(opts.idleTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        .keepAliveTime(opts.keepAliveTime.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        .keepAliveTimeout(opts.keepAliveTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        .also { builder -> channelConfigLambda(builder) }
         .build()
 }

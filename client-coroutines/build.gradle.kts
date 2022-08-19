@@ -7,8 +7,9 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":client-common"))
-    implementation("io.grpc", "grpc-alts", Versions.Grpc)
-    implementation("io.provenance","proto-kotlin", Versions.ProvenanceProtos)
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.KotlinxCore)
+    implementation(projects.clientCommon)
+    implementation(libs.grpc.alts)
+    implementation(libs.grpc.netty)
+    implementation(libs.provenance.protos)
+    implementation(libs.kotlinx.coroutines)
 }

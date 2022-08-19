@@ -19,7 +19,7 @@ import io.provenance.client.wallet.fromMnemonic
 import io.provenance.name.v1.QueryResolveRequest
 import java.net.URI
 
-val networkType = NetworkType("tp", "m/44'/1'/0'/0'/0'")
+val networkType = NetworkType("tp", "m/44'/1'/0'/0/0")
 
 fun main() {
     // GasEstimationMethod.COSMOS_SIMULATION used only if pbc version is 1.7 or lower
@@ -29,8 +29,8 @@ fun main() {
 
     val estimator = floatingGasPrices(GasEstimationMethod.MSG_FEE_CALCULATION, priceGetter)
     val pbClient = PbClient(
-        chainId = "pio-testnet-1",
-        channelUri = URI("grpcs://grpc.test.provenance.io"),
+        chainId = "localnet-main",
+        channelUri = URI("grpc://0.0.0.0:9090"),
         gasEstimationMethod = estimator
     )
 
@@ -62,11 +62,12 @@ fun PbClient.testClientTxn() {
         //     it.value = ByteString.copyFrom("test".toByteArray())
         // }.build()
         Tx.MsgSend.newBuilder()
-            .setToAddress("tp1s9c2asqtp4f6r5k4jsg97p5yekqc6rhqqv7vky")
-            .addAmount("100hash".toCoin())
+            .setFromAddress("tp1x4ay2yxn4e6mnnxd76y0ckdglw45pvnhc08p36")
+            .setToAddress("tp1x4ay2yxn4e6mnnxd76y0ckdglw45pvnhc08p36")
+            .addAmount("100000nhash".toCoin())
             .build()
     )
-    val baseReq = baseRequest(txn.toTxBody(), listOf(BaseReqSigner(walletSigner, 31)), 1.0)
+    val baseReq = baseRequest(txn.toTxBody(), listOf(BaseReqSigner(walletSigner, 0)), 1.0)
     val estimate = estimateTx(baseReq)
     println(estimate)
     println("--------------")

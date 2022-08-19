@@ -1,0 +1,30 @@
+[versions]
+provenance-protos = "1.8.0"
+provenance-hd-wallet = "0.1.15"
+bouncycastle = "1.70"
+grpc = "1.44.0"
+kotlin = "1.6.10"
+kotlinx-core = "1.5.2"
+apache-http = "4.5.13"
+
+[libraries]
+kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom" }
+kotlin-allopen = { module = "org.jetbrains.kotlin:kotlin-allopen" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlin-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+
+bouncycastle = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncycastle" }
+
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
+
+grpc-alts = { module = "io.grpc:grpc-alts", version.ref = "grpc" }
+grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpc" }
+
+provenance-protos = { module = "io.provenance:proto-kotlin", version.ref = "provenance-protos" }
+provenance-hdwallet = { module = "io.provenance.hdwallet:hdwallet", version.ref = "provenance-hd-wallet" }
+
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-core" }
+
+apache-http = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache-http" }

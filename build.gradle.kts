@@ -30,10 +30,10 @@ java {
 dependencies {
     // Kotlin
     // Pin kotlin packages together on a common version:
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation("org.jetbrains.kotlin:kotlin-allopen")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation(libs.kotlin.allopen)
+    implementation(libs.kotlin.bom)
+    implementation(libs.kotlin.reflect)
+    implementation(libs.kotlin.jdk8)
 }
 
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
@@ -66,15 +66,6 @@ subprojects {
         plugin("kotlin")
         plugin("signing")
         plugin("maven-publish")
-    }
-
-    dependencies {
-        // Crypto
-        implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
-
-        // Test
-        testImplementation("org.jetbrains.kotlin:kotlin-test")
-        testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     }
 
     configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
@@ -124,6 +115,12 @@ subprojects {
 
         configure<SigningExtension> {
             sign(publications["maven"])
+        }
+    }
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-Xopt-in=kotlin.time.ExperimentalTime")
         }
     }
 }

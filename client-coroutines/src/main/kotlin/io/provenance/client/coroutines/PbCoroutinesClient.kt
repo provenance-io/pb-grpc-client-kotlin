@@ -6,57 +6,31 @@ import cosmos.auth.v1beta1.QueryOuterClass
 import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.grpc.BaseReq
 import io.provenance.client.grpc.BaseReqSigner
+import io.provenance.client.grpc.ChannelOpts
+import io.provenance.client.grpc.grpcChannel
 import java.io.Closeable
 import java.net.URI
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
-data class ChannelOpts(
-    val inboundMessageSize: Int = 40 * 1024 * 1024, // ~ 20 MB
-    val idleTimeout: Duration = 5.minutes,
-    val keepAliveTime: Duration = 60.seconds, // ~ 12 pbc block cuts
-    val keepAliveTimeout: Duration = 20.seconds,
-    val executor: Executor = Executors.newFixedThreadPool(8)
-)
 
 open class PbCoroutinesClient(
     val chainId: String,
     val channelUri: URI,
     val gasEstimationMethod: GasEstimator,
-    opts: ChannelOpts = ChannelOpts(),
+    val opts: ChannelOpts = ChannelOpts(),
     channelConfigLambda: (NettyChannelBuilder) -> Unit = { }
 ) : Closeable {
 
-    companion object {
-        private val SECURE_URL_SCHEMES = listOf("https", "grpcs", "tcp+tls")
-    }
-
-    private val channel = NettyChannelBuilder.forAddress(channelUri.host, channelUri.port)
-        .apply {
-            if (channelUri.scheme in SECURE_URL_SCHEMES) {
-                useTransportSecurity()
-            } else {
-                usePlaintext()
-            }
-        }
-        .executor(opts.executor)
-        .maxInboundMessageSize(opts.inboundMessageSize)
-        .idleTimeout(opts.idleTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-        .keepAliveTime(opts.keepAliveTime.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-        .keepAliveTimeout(opts.keepAliveTimeout.inWholeMilliseconds, TimeUnit.MILLISECONDS)
-        .also { builder -> channelConfigLambda(builder) }
-        .build()
+    private val channel = grpcChannel(channelUri, opts, channelConfigLambda)
 
     override fun close() {
         channel.shutdown().awaitTermination(10, TimeUnit.SECONDS)
+        (opts.executor as ThreadPoolExecutor).shutdown()
     }
 
     // Service clients

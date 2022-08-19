@@ -9,7 +9,12 @@
 
 rootProject.name = "pb-grpc-client-kotlin"
 
-include("client-common")
-include("client")
-include("client-coroutines")
-include("cli")
+include("client-common", "client", "client-coroutines", "cli")
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

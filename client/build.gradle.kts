@@ -8,12 +8,13 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":client-common"))
-    implementation("io.grpc", "grpc-netty", Versions.Grpc)
-    implementation("org.apache.httpcomponents", "httpclient", Versions.ApachHttp)
+    implementation(projects.clientCommon)
 
-    implementation("io.provenance", "proto-kotlin", Versions.ProvenanceProtos)
-    implementation("io.provenance.hdwallet", "hdwallet", Versions.ProvenanceHDWallet)
+    implementation(libs.grpc.netty)
+    implementation(libs.apache.http)
 
-    testImplementation("org.jetbrains.kotlin", "kotlin-test-junit")
+    implementation(libs.provenance.protos)
+    implementation(libs.provenance.hdwallet)
+
+    testImplementation(libs.kotlin.test.junit)
 }
