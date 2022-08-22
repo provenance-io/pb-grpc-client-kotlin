@@ -4,7 +4,7 @@ provenance-hd-wallet = "0.1.15"
 bouncycastle = "1.70"
 grpc = "1.44.0"
 kotlin = "1.6.10"
-kotlinx-core = "1.5.2"
+kotlinx-core = "1.6.4"
 apache-http = "4.5.13"
 
 [libraries]
@@ -26,5 +26,6 @@ provenance-protos = { module = "io.provenance:proto-kotlin", version.ref = "prov
 provenance-hdwallet = { module = "io.provenance.hdwallet:hdwallet", version.ref = "provenance-hd-wallet" }
 
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-core" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-core" }
 
 apache-http = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache-http" }
