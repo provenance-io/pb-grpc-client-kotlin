@@ -43,7 +43,7 @@ fun main() = runBlocking {
  * Example only... real values are needed to run this example
  */
 suspend fun PbCoroutinesClient.testClientTxn(coroutineContext: CoroutineContext = EmptyCoroutineContext) {
-    val mnemonic = "fly fly comfort" // todo use your own mnemonic
+    val mnemonic = "ticket bulb dash steel slender business call repeat brave lion size immune enjoy luggage toddler empower reject deputy stem harbor honey party laugh roast" // todo use your own mnemonic
     val walletSigner = fromMnemonic(networkType, mnemonic)
 
     val addrs = withContext(coroutineContext) {

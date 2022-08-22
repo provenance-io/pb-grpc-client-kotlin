@@ -30,7 +30,9 @@ open class PbCoroutinesClient(
 
     override fun close() {
         channel.shutdown().awaitTermination(10, TimeUnit.SECONDS)
-        (opts.executor as ThreadPoolExecutor).shutdown()
+        if (opts.executor is ThreadPoolExecutor) {
+            (opts.executor as ThreadPoolExecutor).shutdown()
+        }
     }
 
     // Service clients
