@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class PbClientTest {
     val pbClient = PbCoroutinesClient(
-        chainId = "localnet-main",
+        chainId = "chain-local",
         channelUri = URI("http://localhost:9090"),
         gasEstimationMethod = io.provenance.client.coroutines.GasEstimationMethod.MSG_FEE_CALCULATION // GasEstimationMethod.COSMOS_SIMULATION used only if pbc version is 1.7 or lower
     )
