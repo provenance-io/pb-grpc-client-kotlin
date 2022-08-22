@@ -3,10 +3,12 @@ package io.provenance.client
 import cosmos.auth.v1beta1.QueryOuterClass
 import io.provenance.client.coroutines.PbCoroutinesClient
 import kotlinx.coroutines.test.runTest
+import org.junit.Ignore
 import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@Ignore
 class PbClientTest {
     val pbClient = PbCoroutinesClient(
         chainId = "chain-local",
