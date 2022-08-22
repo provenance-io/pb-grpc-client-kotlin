@@ -69,12 +69,13 @@ subprojects {
     }
 
     configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
+    val artifactName = "pb-grpc-$name-kotlin"
 
     configure<PublishingExtension> {
         publications {
             create<MavenPublication>("maven") {
                 groupId = "io.provenance.client"
-                artifactId = "pb-grpc-client-kotlin"
+                artifactId = artifactName
                 version = "$projectVersion"
 
                 from(components["java"])
