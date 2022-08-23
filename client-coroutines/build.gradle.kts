@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    implementation(projects.clientCommon)
+    api(projects.clientCommon)
     implementation(libs.grpc.alts)
     implementation(libs.grpc.netty)
     implementation(libs.provenance.protos)

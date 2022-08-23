@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    implementation(projects.clientCommon)
+    api(projects.clientCommon)
 
     implementation(libs.grpc.netty)
     implementation(libs.apache.http)
