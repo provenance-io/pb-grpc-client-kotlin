@@ -124,6 +124,11 @@ subprojects {
             freeCompilerArgs = listOf("-Xopt-in=kotlin.time.ExperimentalTime")
         }
     }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
 }
 
 configure<io.github.gradlenexus.publishplugin.NexusPublishExtension> {
