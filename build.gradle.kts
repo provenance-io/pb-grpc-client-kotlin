@@ -11,8 +11,6 @@ buildscript {
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
-    `java-library`
-    `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
@@ -20,8 +18,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    // For KEthereum library
-    maven(url = "https://jitpack.io")
 }
 
 java {
@@ -31,98 +27,16 @@ java {
     withJavadocJar()
 }
 
-val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
-
-object Versions {
-    val ProvenanceProtos = "1.8.0"
-    val ProvenanceHDWallet = "0.1.15"
-    val BouncyCastle = "1.70"
-    val Grpc = "1.44.0"
-    val Kotlin = "1.6.10"
-}
-
 dependencies {
-    // https://mvnrepository.com/artifact/io.provenance/proto-kotlin
-    implementation("io.provenance:proto-kotlin:${Versions.ProvenanceProtos}")
-
     // Kotlin
     // Pin kotlin packages together on a common version:
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom:${Versions.Kotlin}"))
-    implementation("org.jetbrains.kotlin:kotlin-allopen")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
-    // Provenance
-    implementation("io.provenance.hdwallet:hdwallet:${Versions.ProvenanceHDWallet}")
-
-    // Grpc
-    implementation("io.grpc:grpc-alts:${Versions.Grpc}")
-    implementation("io.grpc:grpc-netty:${Versions.Grpc}")
-    implementation("io.grpc:grpc-protobuf:${Versions.Grpc}")
-    implementation("io.grpc:grpc-stub:${Versions.Grpc}")
-    // Crypto
-    implementation("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
-
-    // Test
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    implementation(libs.kotlin.allopen)
+    implementation(libs.kotlin.bom)
+    implementation(libs.kotlin.reflect)
+    implementation(libs.kotlin.jdk8)
 }
 
-configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "io.provenance.client"
-            artifactId = "pb-grpc-client-kotlin"
-            version = "$projectVersion"
-
-            from(components["java"])
-
-            pom {
-                name.set("Provenance Blockchain GRPC Kotlin Client")
-                description.set("A GRPC client for communicating with the Provenance Blockchain")
-                url.set("https://provenance.io")
-
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("vwagner")
-                        name.set("Valerie Wagner")
-                        email.set("tech@figure.com")
-                    }
-                }
-
-                scm {
-                    connection.set("git@github.com:provenance-io/pb-grpc-client-kotlin.git")
-                    developerConnection.set("git@github.com/provenance-io/pb-grpc-client-kotlin.git")
-                    url.set("https://github.com/provenance-io/pb-grpc-client-kotlin")
-                }
-            }
-        }
-    }
-    signing {
-        sign(publishing.publications["maven"])
-    }
-}
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(findProject("ossrhUsername")?.toString() ?: System.getenv("OSSRH_USERNAME"))
-            password.set(findProject("ossrhPassword")?.toString() ?: System.getenv("OSSRH_PASSWORD"))
-            stagingProfileId.set("3180ca260b82a7") // prevents querying for the staging profile id, performance optimization
-        }
-    }
-}
+val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Repos {
     private object sonatype {
@@ -142,6 +56,84 @@ object Repos {
                 username = System.getenv("OSSRH_USERNAME")
                 password = System.getenv("OSSRH_PASSWORD")
             }
+        }
+    }
+}
+
+subprojects {
+    apply {
+        plugin("java")
+        plugin("kotlin")
+        plugin("signing")
+        plugin("maven-publish")
+    }
+
+    configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
+    val artifactName = "pb-grpc-$name-kotlin"
+
+    configure<PublishingExtension> {
+        publications {
+            create<MavenPublication>("maven") {
+                groupId = "io.provenance.client"
+                artifactId = artifactName
+                version = "$projectVersion"
+
+                from(components["java"])
+
+                pom {
+                    name.set("Provenance Blockchain GRPC Kotlin Client")
+                    description.set("A GRPC client for communicating with the Provenance Blockchain")
+                    url.set("https://provenance.io")
+
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("pstory")
+                            name.set("Phil Story")
+                            email.set("tech@figure.com")
+                        }
+                        developer {
+                            id.set("vwagner")
+                            name.set("Valerie Wagner")
+                            email.set("tech@figure.com")
+                        }
+                    }
+
+                    scm {
+                        connection.set("git@github.com:provenance-io/pb-grpc-client-kotlin.git")
+                        developerConnection.set("git@github.com/provenance-io/pb-grpc-client-kotlin.git")
+                        url.set("https://github.com/provenance-io/pb-grpc-client-kotlin")
+                    }
+                }
+            }
+        }
+
+        configure<SigningExtension> {
+            sign(publications["maven"])
+        }
+    }
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-Xopt-in=kotlin.time.ExperimentalTime")
+        }
+    }
+}
+
+configure<io.github.gradlenexus.publishplugin.NexusPublishExtension> {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(findProject("ossrhUsername")?.toString() ?: System.getenv("OSSRH_USERNAME"))
+            password.set(findProject("ossrhPassword")?.toString() ?: System.getenv("OSSRH_PASSWORD"))
+            stagingProfileId.set("3180ca260b82a7") // prevents querying for the staging profile id, performance optimization
         }
     }
 }
