@@ -1,6 +1,6 @@
 # gRPC client for the Provenance Blockchain
 
-**Tip**: Refer to the [Cosmos Proto Docs](https://docs.cosmos.network/v0.47/tooling/protobuf) and
+**Tip**: Refer to the [Cosmos Proto Docs](https://docs.cosmos.network/main/tooling/protobuf) and
 [Provenance Blockchain Proto Docs](https://github.com/provenance-io/provenance/blob/main/docs/proto-docs.md) for
 client interface definitions.
 
