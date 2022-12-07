@@ -1,5 +1,5 @@
 [versions]
-provenance-protos = "1.8.0"
+provenance-protos = "1.13.0"
 provenance-hd-wallet = "0.1.15"
 bouncycastle = "1.70"
 grpc = "1.44.0"
