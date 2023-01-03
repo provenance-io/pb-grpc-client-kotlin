@@ -29,10 +29,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
 ) : Closeable {
 
     // Graceful shutdown of the grpc managed channel.
-    private val channelClose: () -> Unit = {
-        channel.shutdown()
-        channel.shutdown().awaitTermination(10, TimeUnit.SECONDS)
-    }
+    private val channelClose: () -> Unit = { channel.shutdown().awaitTermination(10, TimeUnit.SECONDS) }
 
     override fun close() = channelClose()
 
