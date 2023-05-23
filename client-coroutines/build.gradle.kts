@@ -7,13 +7,17 @@ repositories {
 }
 
 dependencies {
-    api(projects.clientCommon)
-    implementation(libs.grpc.alts)
-    implementation(libs.grpc.netty)
-    implementation(libs.provenance.protos)
-    implementation(libs.kotlinx.coroutines)
+    listOf(
+        projects.clientCommon,
+        libs.grpc.alts,
+        libs.grpc.netty,
+        libs.kotlinx.coroutines,
+        libs.provenance.protos,
+    ).forEach(::api)
 
-    testImplementation(projects.client)
-    testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
+    listOf(
+        projects.client,
+        libs.kotlin.test.junit,
+        libs.kotlinx.coroutines.test,
+    ).forEach(::testImplementation)
 }

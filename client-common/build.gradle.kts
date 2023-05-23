@@ -8,12 +8,11 @@ repositories {
 }
 
 dependencies {
-    // Provenance / Cosmos-SDK protos
-    implementation(libs.provenance.protos)
-    implementation(libs.grpc.alts)
-    implementation(libs.grpc.netty)
+    listOf(
+        libs.grpc.alts,
+        libs.grpc.netty,
+        libs.provenance.protos,
+    ).forEach(::api)
 
-
-    // Test
     testImplementation(libs.kotlin.test.junit)
 }
