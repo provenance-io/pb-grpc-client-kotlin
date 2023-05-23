@@ -10,9 +10,9 @@ repositories {
 dependencies {
     listOf(
         projects.clientCommon,
+        libs.figuretech.hdwallet,
         libs.grpc.alts,
         libs.grpc.netty,
-        libs.provenance.hdwallet,
         libs.provenance.protos,
     ).forEach(::api)
 

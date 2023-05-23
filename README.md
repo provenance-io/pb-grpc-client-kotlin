@@ -178,11 +178,11 @@ import cosmos.tx.v1beta1.TxOuterClass
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.grpc.Signer
 import io.provenance.client.wallet.NetworkType
-import io.provenance.hdwallet.bip39.MnemonicWords
-import io.provenance.hdwallet.wallet.Account
-import io.provenance.hdwallet.wallet.Wallet
 import java.net.URI
 import java.util.concurrent.TimeUnit
+import tech.figure.hdwallet.bip39.MnemonicWords
+import tech.figure.hdwallet.wallet.Account
+import tech.figure.hdwallet.wallet.Wallet
 
 // Some helper extension methods:
 fun Message.toAny(typeUrlPrefix: String = ""): Any = Any.pack(this, typeUrlPrefix)
