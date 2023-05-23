@@ -5,12 +5,12 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20")
     }
 }
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
+    id("org.jetbrains.kotlin.jvm") version "1.7.20"
     signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
@@ -30,10 +30,12 @@ java {
 dependencies {
     // Kotlin
     // Pin kotlin packages together on a common version:
-    implementation(libs.kotlin.allopen)
-    implementation(libs.kotlin.bom)
-    implementation(libs.kotlin.reflect)
-    implementation(libs.kotlin.jdk8)
+    listOf(
+        libs.kotlin.allopen,
+        libs.kotlin.bom,
+        libs.kotlin.reflect,
+        libs.kotlin.jdk8,
+    ).forEach(::implementation)
 }
 
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
