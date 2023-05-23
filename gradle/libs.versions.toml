@@ -1,10 +1,10 @@
 [versions]
 apache-http = "4.5.13"
 bouncycastle = "1.70"
-figuretech-hdwallet = "0.4.1"
 grpc = "1.55.1"
 kotlin = "1.6.10"
 kotlinx-core = "1.6.4"
+provenance-hdwallet = "0.1.15"
 provenance-protos = "1.15.0"
 
 [libraries]
@@ -16,14 +16,13 @@ kotlin-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
 
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncycastle" }
 
-figuretech-hdwallet = { module = "tech.figure.hdwallet:hdwallet", version.ref = "figuretech-hdwallet" }
-
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
 
 grpc-alts = { module = "io.grpc:grpc-alts", version.ref = "grpc" }
 grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpc" }
 
+provenance-hdwallet = { module = "io.provenance.hdwallet:hdwallet", version.ref = "provenance-hdwallet" }
 provenance-protos = { module = "io.provenance:proto-kotlin", version.ref = "provenance-protos" }
 
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-core" }

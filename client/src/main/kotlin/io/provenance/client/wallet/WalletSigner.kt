@@ -3,11 +3,11 @@ package io.provenance.client.wallet
 import com.google.protobuf.ByteString
 import cosmos.crypto.secp256k1.Keys
 import io.provenance.client.grpc.Signer
-import tech.figure.hdwallet.bip39.MnemonicWords
-import tech.figure.hdwallet.common.hashing.sha256
-import tech.figure.hdwallet.signer.BCECSigner
-import tech.figure.hdwallet.wallet.Account
-import tech.figure.hdwallet.wallet.Wallet
+import io.provenance.hdwallet.bip39.MnemonicWords
+import io.provenance.hdwallet.common.hashing.sha256
+import io.provenance.hdwallet.signer.BCECSigner
+import io.provenance.hdwallet.wallet.Account
+import io.provenance.hdwallet.wallet.Wallet
 
 /**
  * Create a [WalletSigner] from a BIP-39 mnemonic.
