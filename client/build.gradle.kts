@@ -8,13 +8,13 @@ repositories {
 }
 
 dependencies {
-    api(projects.clientCommon)
-
-    implementation(libs.grpc.netty)
-    implementation(libs.apache.http)
-
-    implementation(libs.provenance.protos)
-    implementation(libs.provenance.hdwallet)
+    listOf(
+        projects.clientCommon,
+        libs.grpc.alts,
+        libs.grpc.netty,
+        libs.provenance.hdwallet,
+        libs.provenance.protos,
+    ).forEach(::api)
 
     testImplementation(libs.kotlin.test.junit)
 }

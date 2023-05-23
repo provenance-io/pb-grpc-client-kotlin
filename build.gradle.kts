@@ -30,10 +30,12 @@ java {
 dependencies {
     // Kotlin
     // Pin kotlin packages together on a common version:
-    implementation(libs.kotlin.allopen)
-    implementation(libs.kotlin.bom)
-    implementation(libs.kotlin.reflect)
-    implementation(libs.kotlin.jdk8)
+    listOf(
+        libs.kotlin.allopen,
+        libs.kotlin.bom,
+        libs.kotlin.reflect,
+        libs.kotlin.jdk8,
+    ).forEach(::implementation)
 }
 
 val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"

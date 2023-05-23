@@ -1,11 +1,11 @@
 [versions]
-provenance-protos = "1.13.0"
-provenance-hd-wallet = "0.1.15"
+apache-http = "4.5.13"
 bouncycastle = "1.70"
-grpc = "1.44.0"
+grpc = "1.55.1"
 kotlin = "1.6.10"
 kotlinx-core = "1.6.4"
-apache-http = "4.5.13"
+provenance-hdwallet = "0.1.15"
+provenance-protos = "1.15.0"
 
 [libraries]
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
@@ -22,8 +22,8 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit" }
 grpc-alts = { module = "io.grpc:grpc-alts", version.ref = "grpc" }
 grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpc" }
 
+provenance-hdwallet = { module = "io.provenance.hdwallet:hdwallet", version.ref = "provenance-hdwallet" }
 provenance-protos = { module = "io.provenance:proto-kotlin", version.ref = "provenance-protos" }
-provenance-hdwallet = { module = "io.provenance.hdwallet:hdwallet", version.ref = "provenance-hd-wallet" }
 
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-core" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-core" }

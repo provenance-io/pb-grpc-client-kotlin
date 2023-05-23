@@ -8,9 +8,11 @@ repositories {
 }
 
 dependencies {
-    implementation(projects.clientCommon)
-    implementation(projects.client)
-    implementation(projects.clientCoroutines)
-    implementation(libs.provenance.protos)
-    implementation(libs.kotlinx.coroutines)
+    listOf(
+        projects.client,
+        projects.clientCommon,
+        projects.clientCoroutines,
+        libs.kotlinx.coroutines,
+        libs.provenance.protos,
+    ).forEach(::implementation)
 }
