@@ -59,6 +59,8 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
 
     val nameClient = io.provenance.name.v1.QueryGrpc.newBlockingStub(channel)
     val paramsClient = cosmos.params.v1beta1.QueryGrpc.newBlockingStub(channel)
+    val quarantineClient = cosmos.quarantine.v1beta1.QueryGrpc.newBlockingStub(channel)
+    val sanctionClient = cosmos.sanction.v1beta1.QueryGrpc.newBlockingStub(channel)
     val slashingClient = cosmos.slashing.v1beta1.QueryGrpc.newBlockingStub(channel)
     val stakingClient = cosmos.staking.v1beta1.QueryGrpc.newBlockingStub(channel)
     val transferClient = ibc.applications.transfer.v1.QueryGrpc.newBlockingStub(channel)
