@@ -24,7 +24,6 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     open val channelUri: URI,
     open val gasEstimationMethod: GasEstimator,
     open val fromAddress: (String, Int) -> T,
-    opts: ChannelOpts = ChannelOpts(),
     channel: ManagedChannel,
 ) : Closeable {
 
