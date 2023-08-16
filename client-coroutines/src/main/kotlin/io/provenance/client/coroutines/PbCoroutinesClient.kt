@@ -150,7 +150,7 @@ open class PbCoroutinesClient(
         signers = signers,
         gasAdjustment = gasAdjustment,
         feeGranter = feeGranter,
-        feePayer = null,
+        feePayer = feePayer,
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
 }
 
