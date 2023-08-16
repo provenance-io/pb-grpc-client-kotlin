@@ -77,6 +77,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         signers: List<BaseReqSigner>,
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
+        feePayer: String? = null,
     ): BaseReq =
         signers.map {
             BaseReqSigner(
@@ -90,7 +91,8 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
                 body = txBody,
                 chainId = chainId,
                 gasAdjustment = gasAdjustment,
-                feeGranter = feeGranter
+                feeGranter = feeGranter,
+                feePayer = feePayer,
             )
         }
 
@@ -139,12 +141,14 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         signers: List<BaseReqSigner>,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
         gasAdjustment: Double? = null,
-        feeGranter: String? = null
+        feeGranter: String? = null,
+        feePayer: String? = null,
     ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
         gasAdjustment = gasAdjustment,
-        feeGranter = feeGranter
+        feeGranter = feeGranter,
+        feePayer = feePayer,
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
 }
 

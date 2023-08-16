@@ -68,6 +68,7 @@ open class PbCoroutinesClient(
         signers: List<BaseReqSigner>,
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
+        feePayer: String? = null,
     ): BaseReq =
         signers.map {
             BaseReqSigner(
@@ -81,7 +82,8 @@ open class PbCoroutinesClient(
                 body = txBody,
                 chainId = chainId,
                 gasAdjustment = gasAdjustment,
-                feeGranter = feeGranter
+                feeGranter = feeGranter,
+                feePayer = feePayer,
             )
         }
 
@@ -141,12 +143,14 @@ open class PbCoroutinesClient(
         signers: List<BaseReqSigner>,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
         gasAdjustment: Double? = null,
-        feeGranter: String? = null
+        feeGranter: String? = null,
+        feePayer: String? = null,
     ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
         gasAdjustment = gasAdjustment,
-        feeGranter = feeGranter
+        feeGranter = feeGranter,
+        feePayer = null,
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
 }
 
