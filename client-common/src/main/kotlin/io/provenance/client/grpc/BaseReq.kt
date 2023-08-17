@@ -32,7 +32,8 @@ data class BaseReq(
     val body: TxBody,
     val chainId: String,
     val gasAdjustment: Double? = null,
-    val feeGranter: String? = null
+    val feeGranter: String? = null,
+    val feePayer: String? = null,
 ) {
 
     fun buildAuthInfo(gasEstimate: GasEstimate = GasEstimate(0)): AuthInfo =
@@ -44,6 +45,9 @@ data class BaseReq(
                     .also {
                         if (feeGranter != null) {
                             it.granter = feeGranter
+                        }
+                        if (feePayer != null) {
+                            it.payer = feePayer
                         }
                     }
             )
