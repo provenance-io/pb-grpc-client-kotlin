@@ -12,6 +12,8 @@ import io.grpc.stub.MetadataUtils
 import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.msgfees.v1.QueryParamsRequest
+import tech.figure.hdwallet.common.hashing.sha256
+import tech.figure.hdwallet.encoding.base16.Base16
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.TimeUnit
@@ -115,7 +117,8 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     fun broadcastTx(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
-        mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC
+        mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
+        txHashHandler: PreBroadcastTxHashHandler? = null,
     ): ServiceOuterClass.BroadcastTxResponse {
 
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
@@ -131,6 +134,8 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
                 .build()
         }
 
+        txHashHandler?.let { it(txRaw.txHash()) }
+
         return cosmosService.broadcastTx(
             ServiceOuterClass.BroadcastTxRequest.newBuilder().setTxBytes(txRaw.toByteString()).setMode(mode).build()
         )
@@ -143,13 +148,14 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
         feePayer: String? = null,
+        txHashHandler: PreBroadcastTxHashHandler? = null,
     ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
         gasAdjustment = gasAdjustment,
         feeGranter = feeGranter,
         feePayer = feePayer,
-    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
+    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode, txHashHandler = txHashHandler) }
 }
 
 /**
@@ -179,3 +185,7 @@ fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
     metadata.put(io.grpc.Metadata.Key.of(BLOCK_HEIGHT, Metadata.ASCII_STRING_MARSHALLER), blockHeight)
     return withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
 }
+
+typealias PreBroadcastTxHashHandler = (String) -> Unit
+private fun TxOuterClass.TxRaw.txHash(): String = toByteArray().sha256().toHexString()
+private fun ByteArray.toHexString(): String = Base16.encode(this).uppercase()
