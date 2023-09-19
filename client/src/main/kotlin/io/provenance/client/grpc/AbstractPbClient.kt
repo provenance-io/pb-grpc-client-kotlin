@@ -118,7 +118,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
-        hashHandler: PreBroadcastTxHashHandler? = null,
+        txHashHandler: PreBroadcastTxHashHandler? = null,
     ): ServiceOuterClass.BroadcastTxResponse {
 
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
@@ -134,7 +134,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
                 .build()
         }
 
-        hashHandler?.let { it(txRaw.txHash()) }
+        txHashHandler?.let { it(txRaw.txHash()) }
 
         return cosmosService.broadcastTx(
             ServiceOuterClass.BroadcastTxRequest.newBuilder().setTxBytes(txRaw.toByteString()).setMode(mode).build()
@@ -148,14 +148,14 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
         feePayer: String? = null,
-        hashHandler: PreBroadcastTxHashHandler? = null,
+        txHashHandler: PreBroadcastTxHashHandler? = null,
     ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
         gasAdjustment = gasAdjustment,
         feeGranter = feeGranter,
         feePayer = feePayer,
-    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode, hashHandler = hashHandler) }
+    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode, txHashHandler = txHashHandler) }
 }
 
 /**
