@@ -25,7 +25,17 @@ data class BaseReqSigner(
     val signer: Signer,
     val sequenceOffset: Int = 0,
     val account: Auth.BaseAccount? = null
-)
+) {
+    fun buildSignerInfo(): SignerInfo =
+        SignerInfo.newBuilder()
+            .setPublicKey(Any.pack(this.signer.pubKey(), ""))
+            .setModeInfo(
+                ModeInfo.newBuilder()
+                    .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))
+            )
+            .setSequence(this.account!!.sequence + this.sequenceOffset)
+            .build()
+}
 
 data class BaseReq(
     val signers: List<BaseReqSigner>,
@@ -52,20 +62,14 @@ data class BaseReq(
                     }
             )
             .addAllSignerInfos(
-                signers.map {
-                    SignerInfo.newBuilder()
-                        .setPublicKey(Any.pack(it.signer.pubKey(), ""))
-                        .setModeInfo(
-                            ModeInfo.newBuilder()
-                                .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))
-                        )
-                        .setSequence(it.account!!.sequence + it.sequenceOffset)
-                        .build()
-                }
+                signers.map { it.buildSignerInfo() }
             )
             .build()
 
-    fun buildSignDocBytesList(authInfoBytes: ByteString, bodyBytes: ByteString): List<ByteArray> =
+    fun buildSignDocList(
+        authInfoBytes: ByteString = buildAuthInfo().toByteString(),
+        bodyBytes: ByteString = body.toByteString()
+    ): List<SignDoc> =
         signers.map {
             SignDoc.newBuilder()
                 .setBodyBytes(bodyBytes)
@@ -73,6 +77,10 @@ data class BaseReq(
                 .setChainId(chainId)
                 .setAccountNumber(it.account!!.accountNumber)
                 .build()
-                .toByteArray()
+        }
+
+    fun buildSignDocBytesList(authInfoBytes: ByteString, bodyBytes: ByteString): List<ByteArray> =
+        buildSignDocList(authInfoBytes, bodyBytes).map {
+            it.toByteArray()
         }
 }
