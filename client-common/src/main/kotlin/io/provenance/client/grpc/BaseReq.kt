@@ -66,21 +66,20 @@ data class BaseReq(
             )
             .build()
 
-    fun buildSignDocList(
-        authInfoBytes: ByteString = buildAuthInfo().toByteString(),
-        bodyBytes: ByteString = body.toByteString()
-    ): List<SignDoc> =
-        signers.map {
-            SignDoc.newBuilder()
-                .setBodyBytes(bodyBytes)
-                .setAuthInfoBytes(authInfoBytes)
-                .setChainId(chainId)
-                .setAccountNumber(it.account!!.accountNumber)
-                .build()
-        }
+    fun buildSignDoc(
+        signer: BaseReqSigner,
+        authInfoBytes: ByteString,
+        bodyBytes: ByteString,
+    ) =
+        SignDoc.newBuilder()
+            .setBodyBytes(bodyBytes)
+            .setAuthInfoBytes(authInfoBytes)
+            .setChainId(chainId)
+            .setAccountNumber(signer.account!!.accountNumber)
+            .build()
 
     fun buildSignDocBytesList(authInfoBytes: ByteString, bodyBytes: ByteString): List<ByteArray> =
-        buildSignDocList(authInfoBytes, bodyBytes).map {
-            it.toByteArray()
+        signers.map {
+            buildSignDoc(it, authInfoBytes, bodyBytes).toByteArray()
         }
 }
