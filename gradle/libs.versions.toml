@@ -3,7 +3,7 @@ apache-http = "4.5.13"
 bouncycastle = "1.70"
 figuretech-hdwallet = "0.4.1"
 grpc = "1.55.1"
-kotlin = "1.9.0"
+kotlin = "1.9.10"
 kotlinx-core = "1.6.4"
 provenance-protos = "1.16.0"
 
