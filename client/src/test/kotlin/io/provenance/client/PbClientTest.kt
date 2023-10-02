@@ -1,27 +1,31 @@
 package io.provenance.client
 
+import cosmos.auth.v1beta1.Auth
 import cosmos.auth.v1beta1.QueryOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.grpc.GasEstimationMethod
 import io.provenance.client.grpc.PbClient
-import io.provenance.client.wallet.NetworkType
-import io.provenance.client.wallet.fromMnemonic
-import org.junit.Ignore
+import io.provenance.client.wallet.WalletSigner
+import tech.figure.hdwallet.bip39.MnemonicWords
+import tech.figure.hdwallet.hrp.Hrp
+import tech.figure.hdwallet.wallet.Wallet
 import java.net.URI
+import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@Ignore
 // @OptIn(TestnetFeaturePreview::class)
 class PbClientTest {
-    val pbClient = PbClient(
+    private val pbClient = PbClient(
         chainId = "chain-local",
         channelUri = URI("http://localhost:9090"),
         gasEstimationMethod = GasEstimationMethod.MSG_FEE_CALCULATION // GasEstimationMethod.COSMOS_SIMULATION used only if pbc version is 1.7 or lower
     )
 
     @Test
+    @Ignore("requires grpc connection")
     fun testClientQuery() {
         pbClient.authClient.accounts(
             QueryOuterClass.QueryAccountsRequest.getDefaultInstance()
@@ -33,17 +37,38 @@ class PbClientTest {
             )
         }
     }
+    @Test
+    fun `Build BaseReq`() {
+        val txBody = TxOuterClass.TxBody.getDefaultInstance()
+        val account = Auth.BaseAccount.getDefaultInstance()
+        val baseReqSigner = BaseReqSigner(
+            signer = testWalletSigner(),
+            account = account,
+        )
+        val gasAdjustment = 2.0
+        val feeGranter = "granter"
+        val feePayer = "payer"
 
-    /**
-     * Example of how to submit a transaction to chain.
-     *
-     * Example only... real values are needed to run this example
-     */
-    fun testClientTxn() {
-        val mnemonic = "your 20 word phrase here" // todo use your own mnemonic
-        val walletSigner = fromMnemonic(NetworkType("tp", "m/44'/1'/0'/0'/0'"), mnemonic)
-        val txn: TxOuterClass.TxBody = TxOuterClass.TxBody.getDefaultInstance() // todo create your own txn
-
-        pbClient.estimateAndBroadcastTx(txn, listOf(BaseReqSigner(walletSigner)))
+        val result = pbClient.baseRequest(txBody, listOf(baseReqSigner), gasAdjustment, feeGranter, feePayer)
+        assertEquals(txBody, result.body)
+        assertEquals(gasAdjustment, result.gasAdjustment)
+        assertEquals(feeGranter, result.feeGranter)
+        assertEquals(feePayer, result.feePayer)
+        assertEquals(pbClient.chainId, result.chainId)
+        with(result.signers.single()) {
+            assertEquals(baseReqSigner.signer, this.signer)
+            assertEquals(baseReqSigner.sequenceOffset, 0)
+            assertEquals(baseReqSigner.account, this.account)
+        }
     }
+
+    private fun testWalletSigner(): WalletSigner =
+        MnemonicWords.generate().let {
+            Wallet.fromMnemonic(
+                hrp = Hrp.ProvenanceBlockchain.testnet,
+                passphrase = "",
+                mnemonicWords = it,
+                testnet = true
+            )
+        }.let { WalletSigner(it["m/44'/1'/0'/0'/0'"]) }
 }

@@ -18,9 +18,6 @@ import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-/**
- *
- */
 open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     open val chainId: String,
     open val channelUri: URI,
@@ -102,37 +99,47 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         val tx = TxOuterClass.Tx.newBuilder()
             .setBody(baseReq.body)
             .setAuthInfo(baseReq.buildAuthInfo())
+            .addSignatures(ByteString.EMPTY) // signatures are not used for estimates, but a value is required
             .build()
+        val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
 
-        return baseReq.buildSignDocBytesList(tx.authInfo.toByteString(), tx.body.toByteString())
-            .mapIndexed { index, signDocBytes ->
-                baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
-            }.let { signatures ->
-                val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
-                val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
-                gasEstimationMethod(signedTx, gasAdjustment)
-            }
+        return gasEstimationMethod(tx, gasAdjustment)
     }
 
+    /**
+     * Broadcast a transaction.
+     *
+     * @param baseReq request information
+     * @param gasEstimate the approved gas estimate for the transaction
+     * @param mode broadcast mode
+     * @param txHashHandler function called before broadcast with computed txhash value
+     * @param signatures ordered list of signed bytes provided by each signer;
+     *                   any null/empty values will be signed using the Signer implementation
+     */
     fun broadcastTx(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
         txHashHandler: PreBroadcastTxHashHandler? = null,
+        signatures: List<ByteArray?> = emptyList(),
     ): ServiceOuterClass.BroadcastTxResponse {
-
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
         val txBodyBytes = baseReq.body.toByteString()
 
-        val txRaw = baseReq.buildSignDocBytesList(authInfoBytes, txBodyBytes).mapIndexed { index, signDocBytes ->
-            baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
-        }.let {
-            TxOuterClass.TxRaw.newBuilder()
-                .setAuthInfoBytes(authInfoBytes)
-                .setBodyBytes(txBodyBytes)
-                .addAllSignatures(it)
-                .build()
+        val txRaw = baseReq.signers.mapIndexed { index, baseReqSigner ->
+            signatures[index]?.takeIf { it.isNotEmpty() }
+                ?: baseReqSigner.signer.sign(
+                    baseReq.buildSignDoc(baseReqSigner, authInfoBytes, txBodyBytes).toByteArray()
+                )
         }
+            .map { ByteString.copyFrom(it) }
+            .let {
+                TxOuterClass.TxRaw.newBuilder()
+                    .setAuthInfoBytes(authInfoBytes)
+                    .setBodyBytes(txBodyBytes)
+                    .addAllSignatures(it)
+                    .build()
+            }
 
         txHashHandler?.let { it(txRaw.txHash()) }
 
@@ -141,6 +148,19 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         )
     }
 
+    /**
+     * Estimate and broadcast a transaction.
+     *
+     * @param txBody complete transaction body
+     * @param signers list of required signers of the transaction
+     * @param mode broadcast mode
+     * @param gasAdjustment gas adjustment factor
+     * @param feeGranter address of fee granter
+     * @param feePayer address of fee payer
+     * @param txHashHandler function called before broadcast with computed txhash value
+     * @param signatures ordered list of signed bytes provided by each signer;
+     *                   any null/empty values will be signed using the Signer implementation
+     */
     fun estimateAndBroadcastTx(
         txBody: TxOuterClass.TxBody,
         signers: List<BaseReqSigner>,
@@ -149,13 +169,23 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         feeGranter: String? = null,
         feePayer: String? = null,
         txHashHandler: PreBroadcastTxHashHandler? = null,
-    ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
-        txBody = txBody,
-        signers = signers,
-        gasAdjustment = gasAdjustment,
-        feeGranter = feeGranter,
-        feePayer = feePayer,
-    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode, txHashHandler = txHashHandler) }
+        signatures: List<ByteArray?> = emptyList(),
+    ): ServiceOuterClass.BroadcastTxResponse =
+        baseRequest(
+            txBody = txBody,
+            signers = signers,
+            gasAdjustment = gasAdjustment,
+            feeGranter = feeGranter,
+            feePayer = feePayer,
+        ).let { baseReq ->
+            broadcastTx(
+                baseReq = baseReq,
+                gasEstimate = estimateTx(baseReq),
+                mode = mode,
+                txHashHandler = txHashHandler,
+                signatures = signatures
+            )
+        }
 }
 
 /**
@@ -181,11 +211,12 @@ const val BLOCK_HEIGHT = "x-cosmos-block-height"
  * @return The grpc stub with the block header interceptor added.
  */
 fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
-    val metadata = io.grpc.Metadata()
-    metadata.put(io.grpc.Metadata.Key.of(BLOCK_HEIGHT, Metadata.ASCII_STRING_MARSHALLER), blockHeight)
+    val metadata = Metadata()
+    metadata.put(Metadata.Key.of(BLOCK_HEIGHT, Metadata.ASCII_STRING_MARSHALLER), blockHeight)
     return withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
 }
 
 typealias PreBroadcastTxHashHandler = (String) -> Unit
+
 private fun TxOuterClass.TxRaw.txHash(): String = toByteArray().sha256().toHexString()
 private fun ByteArray.toHexString(): String = Base16.encode(this).uppercase()

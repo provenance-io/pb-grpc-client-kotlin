@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.net.URI
 
 buildscript {
@@ -5,30 +6,19 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
     }
 }
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.10"
     signing
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
 }
 
 repositories {
     mavenCentral()
-}
-
-kotlin {
-    jvmToolchain(17)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    withSourcesJar()
-    withJavadocJar()
 }
 
 dependencies {
@@ -125,9 +115,10 @@ subprojects {
         }
     }
 
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions {
-            freeCompilerArgs = listOf("-Xopt-in=kotlin.time.ExperimentalTime")
+    configure<KotlinJvmProjectExtension> {
+        jvmToolchain(17)
+        compilerOptions {
+            freeCompilerArgs.set(listOf("-opt-in=kotlin.time.ExperimentalTime"))
         }
     }
 

@@ -81,7 +81,7 @@ fun fromBase58EncodedKey(networkType: NetworkType, key: String) =
 /**
  * The signing wallet implementation
  *
- * @property account The account used for transacting on the blockhain.
+ * @property account The account used for transacting on the blockchain.
  */
 class WalletSigner(private val account: Account) : Signer {
 

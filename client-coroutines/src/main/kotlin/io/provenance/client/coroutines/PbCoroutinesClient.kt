@@ -94,16 +94,11 @@ open class PbCoroutinesClient(
         val tx = mkTx {
             body = baseReq.body
             authInfo = baseReq.buildAuthInfo()
+            signaturesList.add(ByteString.EMPTY)
         }
 
-        val signatures = baseReq.buildSignDocBytesList(tx.authInfo.toByteString(), tx.body.toByteString())
-            .mapIndexed { index, signDocBytes ->
-                baseReq.signers[index].signer.sign(signDocBytes).let { ByteString.copyFrom(it) }
-            }
-
-        val signedTx = tx.toBuilder().addAllSignatures(signatures).build()
         val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
-        return gasEstimationMethod(this, signedTx, gasAdjustment)
+        return gasEstimationMethod(this, tx, gasAdjustment)
     }
 
     private fun buildTx(

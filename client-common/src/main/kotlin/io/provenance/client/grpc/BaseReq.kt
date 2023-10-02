@@ -25,7 +25,17 @@ data class BaseReqSigner(
     val signer: Signer,
     val sequenceOffset: Int = 0,
     val account: Auth.BaseAccount? = null
-)
+) {
+    fun buildSignerInfo(): SignerInfo =
+        SignerInfo.newBuilder()
+            .setPublicKey(Any.pack(this.signer.pubKey(), ""))
+            .setModeInfo(
+                ModeInfo.newBuilder()
+                    .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))
+            )
+            .setSequence(this.account!!.sequence + this.sequenceOffset)
+            .build()
+}
 
 data class BaseReq(
     val signers: List<BaseReqSigner>,
@@ -52,27 +62,24 @@ data class BaseReq(
                     }
             )
             .addAllSignerInfos(
-                signers.map {
-                    SignerInfo.newBuilder()
-                        .setPublicKey(Any.pack(it.signer.pubKey(), ""))
-                        .setModeInfo(
-                            ModeInfo.newBuilder()
-                                .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))
-                        )
-                        .setSequence(it.account!!.sequence + it.sequenceOffset)
-                        .build()
-                }
+                signers.map { it.buildSignerInfo() }
             )
+            .build()
+
+    fun buildSignDoc(
+        signer: BaseReqSigner,
+        authInfoBytes: ByteString,
+        bodyBytes: ByteString,
+    ) =
+        SignDoc.newBuilder()
+            .setBodyBytes(bodyBytes)
+            .setAuthInfoBytes(authInfoBytes)
+            .setChainId(chainId)
+            .setAccountNumber(signer.account!!.accountNumber)
             .build()
 
     fun buildSignDocBytesList(authInfoBytes: ByteString, bodyBytes: ByteString): List<ByteArray> =
         signers.map {
-            SignDoc.newBuilder()
-                .setBodyBytes(bodyBytes)
-                .setAuthInfoBytes(authInfoBytes)
-                .setChainId(chainId)
-                .setAccountNumber(it.account!!.accountNumber)
-                .build()
-                .toByteArray()
+            buildSignDoc(it, authInfoBytes, bodyBytes).toByteArray()
         }
 }
