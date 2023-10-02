@@ -32,7 +32,7 @@ dependencies {
     ).forEach(::implementation)
 }
 
-val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "3.0-SNAPSHOT"
+val projectVersion = project.property("version")?.takeIf { it != "unspecified" } ?: "1.0-SNAPSHOT"
 
 object Repos {
     private object sonatype {
