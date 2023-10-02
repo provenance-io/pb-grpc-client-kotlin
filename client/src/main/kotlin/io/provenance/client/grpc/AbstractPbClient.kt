@@ -113,21 +113,21 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
      * @param gasEstimate the approved gas estimate for the transaction
      * @param mode broadcast mode
      * @param txHashHandler function called before broadcast with computed txhash value
-     * @param signatures map of signer index to signed bytes;
-     *                   any indexes not included will be signed using the Signer implementation
+     * @param signatures ordered list of signed bytes provided by each signer;
+     *                   any null/empty values will be signed using the Signer implementation
      */
     fun broadcastTx(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
         txHashHandler: PreBroadcastTxHashHandler? = null,
-        signatures: Map<Int, ByteArray> = emptyMap(),
+        signatures: List<ByteArray?> = emptyList(),
     ): ServiceOuterClass.BroadcastTxResponse {
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
         val txBodyBytes = baseReq.body.toByteString()
 
         val txRaw = baseReq.signers.mapIndexed { index, baseReqSigner ->
-            signatures[index]
+            signatures[index]?.takeIf { it.isNotEmpty() }
                 ?: baseReqSigner.signer.sign(
                     baseReq.buildSignDoc(baseReqSigner, authInfoBytes, txBodyBytes).toByteArray()
                 )
@@ -158,8 +158,8 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
      * @param feeGranter address of fee granter
      * @param feePayer address of fee payer
      * @param txHashHandler function called before broadcast with computed txhash value
-     * @param signatures map of signer index to signed bytes;
-     *                   any indexes not included will be signed using the Signer implementation
+     * @param signatures ordered list of signed bytes provided by each signer;
+     *                   any null/empty values will be signed using the Signer implementation
      */
     fun estimateAndBroadcastTx(
         txBody: TxOuterClass.TxBody,
@@ -169,7 +169,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         feeGranter: String? = null,
         feePayer: String? = null,
         txHashHandler: PreBroadcastTxHashHandler? = null,
-        signatures: Map<Int, ByteArray> = emptyMap(),
+        signatures: List<ByteArray?> = emptyList(),
     ): ServiceOuterClass.BroadcastTxResponse =
         baseRequest(
             txBody = txBody,
@@ -211,8 +211,8 @@ const val BLOCK_HEIGHT = "x-cosmos-block-height"
  * @return The grpc stub with the block header interceptor added.
  */
 fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
-    val metadata = io.grpc.Metadata()
-    metadata.put(io.grpc.Metadata.Key.of(BLOCK_HEIGHT, Metadata.ASCII_STRING_MARSHALLER), blockHeight)
+    val metadata = Metadata()
+    metadata.put(Metadata.Key.of(BLOCK_HEIGHT, Metadata.ASCII_STRING_MARSHALLER), blockHeight)
     return withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
 }
 
