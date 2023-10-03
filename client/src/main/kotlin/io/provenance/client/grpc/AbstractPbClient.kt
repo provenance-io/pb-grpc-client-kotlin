@@ -127,7 +127,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         val txBodyBytes = baseReq.body.toByteString()
 
         require(signatures.size == baseReq.signers.size) {
-            "The number of signatures must match the number of signers"
+            "The number of signatures must match the number of signers. A null/empty signature entry will sign using the Signer implementation."
         }
 
         val txRaw = baseReq.signers.mapIndexed { index, baseReqSigner ->
