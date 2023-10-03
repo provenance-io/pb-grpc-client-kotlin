@@ -121,10 +121,14 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         gasEstimate: GasEstimate,
         mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
         txHashHandler: PreBroadcastTxHashHandler? = null,
-        signatures: List<ByteArray?> = emptyList(),
+        signatures: List<ByteArray?> = List(baseReq.signers.size) { null },
     ): ServiceOuterClass.BroadcastTxResponse {
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
         val txBodyBytes = baseReq.body.toByteString()
+
+        require(signatures.size == baseReq.signers.size) {
+            "The number of signatures must match the number of signers. A null/empty signature entry will sign using the Signer implementation."
+        }
 
         val txRaw = baseReq.signers.mapIndexed { index, baseReqSigner ->
             signatures[index]?.takeIf { it.isNotEmpty() }
@@ -169,7 +173,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         feeGranter: String? = null,
         feePayer: String? = null,
         txHashHandler: PreBroadcastTxHashHandler? = null,
-        signatures: List<ByteArray?> = emptyList(),
+        signatures: List<ByteArray?> = List(signers.size) { null },
     ): ServiceOuterClass.BroadcastTxResponse =
         baseRequest(
             txBody = txBody,
