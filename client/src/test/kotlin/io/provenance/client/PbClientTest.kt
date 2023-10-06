@@ -2,10 +2,14 @@ package io.provenance.client
 
 import cosmos.auth.v1beta1.Auth
 import cosmos.auth.v1beta1.QueryOuterClass
+import cosmos.bank.v1beta1.Tx.MsgSend
+import cosmos.base.v1beta1.coin
+import cosmos.tx.v1beta1.ServiceOuterClass
 import cosmos.tx.v1beta1.TxOuterClass
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.grpc.GasEstimationMethod
 import io.provenance.client.grpc.PbClient
+import io.provenance.client.protobuf.extensions.toAny
 import io.provenance.client.wallet.WalletSigner
 import tech.figure.hdwallet.bip39.MnemonicWords
 import tech.figure.hdwallet.hrp.Hrp
@@ -60,6 +64,27 @@ class PbClientTest {
             assertEquals(baseReqSigner.sequenceOffset, 0)
             assertEquals(baseReqSigner.account, this.account)
         }
+    }
+
+    @Test
+    @Ignore("requires grpc connection")
+    fun `Simulated BROADCAST_MODE_BLOCK works`() {
+        val signer = testWalletSigner()
+        val result = pbClient.estimateAndBroadcastTx(
+            TxOuterClass.TxBody.newBuilder().addMessages(MsgSend.newBuilder()
+                .setFromAddress(signer.address())
+                .setToAddress(signer.address())
+                .addAmount(coin {
+                    this.amount = "1"
+                    this.denom = "nhash"
+                }).build()
+            .toAny()).build(),
+            listOf(BaseReqSigner(signer)),
+            mode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_BLOCK,
+        ).get()
+
+        assert(result.txResponse.height > 0) { "Transaction response had no height" }
+        assert(result.txResponse.code == 0) { "Transaction not successful" }
     }
 
     private fun testWalletSigner(): WalletSigner =
