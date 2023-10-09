@@ -13,6 +13,7 @@ dependencies {
         libs.grpc.netty,
         libs.kotlinx.coroutines,
         libs.provenance.protos,
+        libs.protobuf.kotlin,
     ).forEach(::api)
 
     listOf(

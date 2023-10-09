@@ -1,4 +1,4 @@
-package io.provenance.client.exceptions
+package io.provenance.client.common.exceptions
 
 import io.grpc.Status
 import io.grpc.StatusRuntimeException

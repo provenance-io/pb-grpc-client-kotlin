@@ -3,19 +3,29 @@ package io.provenance.client.coroutines
 import com.google.protobuf.ByteString
 import cosmos.auth.v1beta1.QueryGrpcKt
 import cosmos.auth.v1beta1.QueryOuterClass
-import cosmos.tx.v1beta1.ServiceOuterClass
+import cosmos.base.tendermint.v1beta1.getLatestBlockRequest
+import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastMode
+import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxRequest
+import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxResponse
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxBody
+import cosmos.tx.v1beta1.getTxRequest
+import cosmos.tx.v1beta1.tx
+import io.grpc.StatusException
+import io.grpc.StatusRuntimeException
 import io.grpc.netty.NettyChannelBuilder
+import io.provenance.client.common.exceptions.TransactionTimeoutException
 import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.grpc.BaseReq
 import io.provenance.client.grpc.BaseReqSigner
 import io.provenance.client.grpc.ChannelOpts
 import io.provenance.client.grpc.grpcChannel
+import kotlinx.coroutines.delay
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 
 open class PbCoroutinesClient(
@@ -87,18 +97,20 @@ open class PbCoroutinesClient(
             )
         }
 
-    private fun mkTx(body: TxOuterClass.Tx.Builder.() -> Unit): TxOuterClass.Tx =
-        TxOuterClass.Tx.newBuilder().also(body).build()
-
     suspend fun estimateTx(baseReq: BaseReq): GasEstimate {
-        val tx = mkTx {
+        val transaction = tx {
             body = baseReq.body
             authInfo = baseReq.buildAuthInfo()
-            signaturesList.add(ByteString.EMPTY)
+            signatures.add(ByteString.EMPTY)
         }
+//        val tx = mkTx {
+//            body = baseReq.body
+//            authInfo = baseReq.buildAuthInfo()
+//            signaturesList.add(ByteString.EMPTY)
+//        }
 
         val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
-        return gasEstimationMethod(this, tx, gasAdjustment)
+        return gasEstimationMethod(this, transaction, gasAdjustment)
     }
 
     private fun buildTx(
@@ -122,31 +134,67 @@ open class PbCoroutinesClient(
     suspend fun broadcastTx(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
-        mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC
-    ): ServiceOuterClass.BroadcastTxResponse {
-        return cosmosService.broadcastTx(
-            ServiceOuterClass.BroadcastTxRequest
-                .newBuilder()
-                .setTxBytes(buildTx(baseReq, gasEstimate).toByteString())
-                .setMode(mode)
-                .build()
-        )
+        mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC
+    ): BroadcastTxResponse {
+        return buildTx(baseReq, gasEstimate)
+            .emulateBlockMode(mode, baseReq.body.timeoutHeight) {
+               cosmosService.broadcastTx(it)
+            }
     }
 
     suspend fun estimateAndBroadcastTx(
         txBody: TxBody,
         signers: List<BaseReqSigner>,
-        mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
+        mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC,
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
         feePayer: String? = null,
-    ): ServiceOuterClass.BroadcastTxResponse = baseRequest(
+    ): BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
         gasAdjustment = gasAdjustment,
         feeGranter = feeGranter,
         feePayer = feePayer,
     ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
+
+    private suspend fun TxOuterClass.TxRaw.emulateBlockMode(
+        mode: BroadcastMode,
+        providedTimeoutHeight: Long,
+        handler: suspend (BroadcastTxRequest) -> BroadcastTxResponse
+    ): BroadcastTxResponse {
+        val (actualMode, simulateBlock) = if (mode == BroadcastMode.BROADCAST_MODE_BLOCK) {
+            BroadcastMode.BROADCAST_MODE_SYNC to true
+        } else {
+            mode to false
+        }
+        return handler(BroadcastTxRequest.newBuilder()
+            .setTxBytes(this.toByteString())
+            .setMode(actualMode)
+            .build()
+        ).let { res ->
+            if (simulateBlock) {
+                val timeoutHeight = providedTimeoutHeight.takeIf { it > 0 } ?: (latestHeight() + 10) // default to 10 block timeout for polling if no height set
+                val txHash = res.txResponse.txhash
+                do {
+                    try {
+                        val tx = cosmosService.getTx(getTxRequest { hash = txHash })
+                        return res.toBuilder()
+                            .setTxResponse(tx.txResponse)
+                            .build()
+                    } catch (e: StatusException) {
+                        if (e.message?.contains("not found") == true) {
+                            delay(1000.milliseconds)
+                            continue
+                        }
+                        throw e
+                    }
+                } while (latestHeight() <= timeoutHeight)
+                throw TransactionTimeoutException("Failed to complete transaction with hash $txHash by height $timeoutHeight")
+            } else res
+        }
+    }
+
+    suspend fun latestHeight() = this.tendermintService.getLatestBlock(getLatestBlockRequest {  }).block.header.height
 }
 
 /**

@@ -18,7 +18,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.AbstractStub
 import io.grpc.stub.MetadataUtils
 import io.provenance.client.common.gas.GasEstimate
-import io.provenance.client.exceptions.TransactionTimeoutException
+import io.provenance.client.common.exceptions.TransactionTimeoutException
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.client.protobuf.extensions.getTx
 import io.provenance.msgfees.v1.QueryParamsRequest
@@ -153,7 +153,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         }
             .map { ByteString.copyFrom(it) }
             .let {
-                TxOuterClass.TxRaw.newBuilder()
+                TxRaw.newBuilder()
                     .setAuthInfoBytes(authInfoBytes)
                     .setBodyBytes(txBodyBytes)
                     .addAllSignatures(it)
@@ -278,5 +278,5 @@ fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
 
 typealias PreBroadcastTxHashHandler = (String) -> Unit
 
-private fun TxOuterClass.TxRaw.txHash(): String = toByteArray().sha256().toHexString()
+private fun TxRaw.txHash(): String = toByteArray().sha256().toHexString()
 private fun ByteArray.toHexString(): String = Base16.encode(this).uppercase()
