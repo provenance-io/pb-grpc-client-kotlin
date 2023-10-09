@@ -103,11 +103,6 @@ open class PbCoroutinesClient(
             authInfo = baseReq.buildAuthInfo()
             signatures.add(ByteString.EMPTY)
         }
-//        val tx = mkTx {
-//            body = baseReq.body
-//            authInfo = baseReq.buildAuthInfo()
-//            signaturesList.add(ByteString.EMPTY)
-//        }
 
         val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
         return gasEstimationMethod(this, transaction, gasAdjustment)
