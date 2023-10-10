@@ -1,8 +1,5 @@
 package io.provenance.client.grpc
 
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.google.protobuf.ByteString
 import cosmos.base.tendermint.v1beta1.getLatestBlockRequest
 import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastMode
@@ -19,15 +16,12 @@ import io.grpc.stub.AbstractStub
 import io.grpc.stub.MetadataUtils
 import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.common.exceptions.TransactionTimeoutException
+import io.provenance.client.common.extensions.txHash
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.client.protobuf.extensions.getTx
 import io.provenance.msgfees.v1.QueryParamsRequest
-import tech.figure.hdwallet.common.hashing.sha256
-import tech.figure.hdwallet.encoding.base16.Base16
 import java.io.Closeable
 import java.net.URI
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
@@ -36,13 +30,10 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     open val gasEstimationMethod: GasEstimator,
     open val fromAddress: (String, Int) -> T,
     channel: ManagedChannel,
-    txPollingThreadPool: ExecutorService = Executors.newFixedThreadPool(5)
 ) : Closeable {
 
     // Graceful shutdown of the grpc managed channel.
     private val channelClose: () -> Unit = { channel.shutdown().awaitTermination(10, TimeUnit.SECONDS) }
-
-    internal open val txPollingThreadPool = MoreExecutors.listeningDecorator(txPollingThreadPool)
 
     override fun close() = channelClose()
 
@@ -137,7 +128,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC,
         txHashHandler: PreBroadcastTxHashHandler? = null,
         signatures: List<ByteArray?> = List(baseReq.signers.size) { null },
-    ): ListenableFuture<BroadcastTxResponse> {
+    ): BroadcastTxResponse {
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
         val txBodyBytes = baseReq.body.toByteString()
 
@@ -189,7 +180,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         feePayer: String? = null,
         txHashHandler: PreBroadcastTxHashHandler? = null,
         signatures: List<ByteArray?> = List(signers.size) { null },
-    ): ListenableFuture<BroadcastTxResponse> =
+    ): BroadcastTxResponse =
         baseRequest(
             txBody = txBody,
             signers = signers,
@@ -210,7 +201,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         mode: BroadcastMode,
         providedTimeoutHeight: Long,
         handler: (BroadcastTxRequest) -> BroadcastTxResponse
-    ): ListenableFuture<BroadcastTxResponse> {
+    ): BroadcastTxResponse {
         val (actualMode, simulateBlock) = if (mode == BroadcastMode.BROADCAST_MODE_BLOCK) {
             BroadcastMode.BROADCAST_MODE_SYNC to true
         } else {
@@ -222,26 +213,24 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
             .build()
         ).let { res ->
             if (simulateBlock) {
-                txPollingThreadPool.submit<BroadcastTxResponse> {
-                    val timeoutHeight = providedTimeoutHeight.takeIf { it > 0 } ?: (latestHeight() + 10) // default to 10 block timeout for polling if no height set
-                    val txHash = res.txResponse.txhash
-                    do {
-                        try {
-                            val tx = cosmosService.getTx(txHash)
-                            return@submit res.toBuilder()
-                                .setTxResponse(tx.txResponse)
-                                .build()
-                        } catch (e: StatusRuntimeException) {
-                            if (e.message?.contains("not found") == true) {
-                                Thread.sleep(1000)
-                                continue
-                            }
-                            throw e
+                val timeoutHeight = providedTimeoutHeight.takeIf { it > 0 } ?: (latestHeight() + 10) // default to 10 block timeout for polling if no height set
+                val txHash = res.txResponse.txhash
+                do {
+                    try {
+                        val tx = cosmosService.getTx(txHash)
+                        return res.toBuilder()
+                            .setTxResponse(tx.txResponse)
+                            .build()
+                    } catch (e: StatusRuntimeException) {
+                        if (e.message?.contains("not found") == true) {
+                            Thread.sleep(1000)
+                            continue
                         }
-                    } while (latestHeight() <= timeoutHeight)
-                    throw TransactionTimeoutException("Failed to complete transaction with hash $txHash by height $timeoutHeight")
-                }
-            } else Futures.immediateFuture(res)
+                        throw e
+                    }
+                } while (latestHeight() <= timeoutHeight)
+                throw TransactionTimeoutException("Failed to complete transaction with hash $txHash by height $timeoutHeight")
+            } else res
         }
     }
 
@@ -277,6 +266,3 @@ fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
 }
 
 typealias PreBroadcastTxHashHandler = (String) -> Unit
-
-private fun TxRaw.txHash(): String = toByteArray().sha256().toHexString()
-private fun ByteArray.toHexString(): String = Base16.encode(this).uppercase()

@@ -15,6 +15,7 @@ import io.grpc.StatusException
 import io.grpc.StatusRuntimeException
 import io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.common.exceptions.TransactionTimeoutException
+import io.provenance.client.common.extensions.txHash
 import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.grpc.BaseReq
 import io.provenance.client.grpc.BaseReqSigner
@@ -129,9 +130,13 @@ open class PbCoroutinesClient(
     suspend fun broadcastTx(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
-        mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC
+        mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC,
+        txHashHandler: PreBroadcastTxHashHandler? = null,
     ): BroadcastTxResponse {
         return buildTx(baseReq, gasEstimate)
+            .also { txRaw ->
+                txHashHandler?.let { it(txRaw.txHash()) }
+            }
             .emulateBlockMode(mode, baseReq.body.timeoutHeight) {
                cosmosService.broadcastTx(it)
             }
@@ -144,13 +149,14 @@ open class PbCoroutinesClient(
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
         feePayer: String? = null,
+        txHashHandler: PreBroadcastTxHashHandler? = null,
     ): BroadcastTxResponse = baseRequest(
         txBody = txBody,
         signers = signers,
         gasAdjustment = gasAdjustment,
         feeGranter = feeGranter,
         feePayer = feePayer,
-    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode) }
+    ).let { baseReq -> broadcastTx(baseReq, estimateTx(baseReq), mode, txHashHandler) }
 
     private suspend fun TxOuterClass.TxRaw.emulateBlockMode(
         mode: BroadcastMode,
@@ -207,3 +213,5 @@ suspend fun QueryGrpcKt.QueryCoroutineStub.getBaseAccount(bech32Address: String)
             else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
         }
     }
+
+typealias PreBroadcastTxHashHandler = suspend (String) -> Unit
