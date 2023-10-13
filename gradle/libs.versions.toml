@@ -6,6 +6,7 @@ grpc = "1.55.1"
 kotlin = "1.9.10"
 kotlinx-core = "1.6.4"
 provenance-protos = "1.16.0"
+protobuf = "3.23.2"
 
 [libraries]
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -25,6 +26,7 @@ grpc-alts = { module = "io.grpc:grpc-alts", version.ref = "grpc" }
 grpc-netty = { module = "io.grpc:grpc-netty", version.ref = "grpc" }
 
 provenance-protos = { module = "io.provenance:proto-kotlin", version.ref = "provenance-protos" }
+protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobuf" }
 
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-core" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-core" }

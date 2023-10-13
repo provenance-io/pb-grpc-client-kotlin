@@ -1,19 +1,25 @@
 package io.provenance.client.grpc
 
 import com.google.protobuf.ByteString
-import cosmos.tx.v1beta1.ServiceOuterClass
+import cosmos.base.tendermint.v1beta1.getLatestBlockRequest
+import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastMode
+import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxRequest
+import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxResponse
 import cosmos.tx.v1beta1.TxOuterClass
+import cosmos.tx.v1beta1.TxOuterClass.TxRaw
 import io.grpc.Channel
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.AbstractStub
 import io.grpc.stub.MetadataUtils
 import io.provenance.client.common.gas.GasEstimate
+import io.provenance.client.common.exceptions.TransactionTimeoutException
+import io.provenance.client.common.extensions.txHash
 import io.provenance.client.protobuf.extensions.getBaseAccount
+import io.provenance.client.protobuf.extensions.getTx
 import io.provenance.msgfees.v1.QueryParamsRequest
-import tech.figure.hdwallet.common.hashing.sha256
-import tech.figure.hdwallet.encoding.base16.Base16
 import java.io.Closeable
 import java.net.URI
 import java.util.concurrent.TimeUnit
@@ -119,10 +125,10 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     fun broadcastTx(
         baseReq: BaseReq,
         gasEstimate: GasEstimate,
-        mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
+        mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC,
         txHashHandler: PreBroadcastTxHashHandler? = null,
         signatures: List<ByteArray?> = List(baseReq.signers.size) { null },
-    ): ServiceOuterClass.BroadcastTxResponse {
+    ): BroadcastTxResponse {
         val authInfoBytes = baseReq.buildAuthInfo(gasEstimate).toByteString()
         val txBodyBytes = baseReq.body.toByteString()
 
@@ -138,7 +144,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         }
             .map { ByteString.copyFrom(it) }
             .let {
-                TxOuterClass.TxRaw.newBuilder()
+                TxRaw.newBuilder()
                     .setAuthInfoBytes(authInfoBytes)
                     .setBodyBytes(txBodyBytes)
                     .addAllSignatures(it)
@@ -147,9 +153,9 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
 
         txHashHandler?.let { it(txRaw.txHash()) }
 
-        return cosmosService.broadcastTx(
-            ServiceOuterClass.BroadcastTxRequest.newBuilder().setTxBytes(txRaw.toByteString()).setMode(mode).build()
-        )
+        return txRaw.emulateBlockMode(mode, baseReq.body.timeoutHeight) { req ->
+            cosmosService.broadcastTx(req)
+        }
     }
 
     /**
@@ -168,13 +174,13 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     fun estimateAndBroadcastTx(
         txBody: TxOuterClass.TxBody,
         signers: List<BaseReqSigner>,
-        mode: ServiceOuterClass.BroadcastMode = ServiceOuterClass.BroadcastMode.BROADCAST_MODE_SYNC,
+        mode: BroadcastMode = BroadcastMode.BROADCAST_MODE_SYNC,
         gasAdjustment: Double? = null,
         feeGranter: String? = null,
         feePayer: String? = null,
         txHashHandler: PreBroadcastTxHashHandler? = null,
         signatures: List<ByteArray?> = List(signers.size) { null },
-    ): ServiceOuterClass.BroadcastTxResponse =
+    ): BroadcastTxResponse =
         baseRequest(
             txBody = txBody,
             signers = signers,
@@ -190,6 +196,45 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
                 signatures = signatures
             )
         }
+
+    private fun TxRaw.emulateBlockMode(
+        mode: BroadcastMode,
+        providedTimeoutHeight: Long,
+        handler: (BroadcastTxRequest) -> BroadcastTxResponse
+    ): BroadcastTxResponse {
+        val (actualMode, simulateBlock) = if (mode == BroadcastMode.BROADCAST_MODE_BLOCK) {
+            BroadcastMode.BROADCAST_MODE_SYNC to true
+        } else {
+            mode to false
+        }
+        return handler(BroadcastTxRequest.newBuilder()
+            .setTxBytes(this.toByteString())
+            .setMode(actualMode)
+            .build()
+        ).let { res ->
+            if (simulateBlock) {
+                val timeoutHeight = providedTimeoutHeight.takeIf { it > 0 } ?: (latestHeight() + 10) // default to 10 block timeout for polling if no height set
+                val txHash = res.txResponse.txhash
+                do {
+                    try {
+                        val tx = cosmosService.getTx(txHash)
+                        return res.toBuilder()
+                            .setTxResponse(tx.txResponse)
+                            .build()
+                    } catch (e: StatusRuntimeException) {
+                        if (e.message?.contains("not found") == true) {
+                            Thread.sleep(1000)
+                            continue
+                        }
+                        throw e
+                    }
+                } while (latestHeight() <= timeoutHeight)
+                throw TransactionTimeoutException("Failed to complete transaction with hash $txHash by height $timeoutHeight")
+            } else res
+        }
+    }
+
+    fun latestHeight() = this@AbstractPbClient.tendermintService.getLatestBlock(getLatestBlockRequest {  }).block.header.height
 }
 
 /**
@@ -221,6 +266,3 @@ fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
 }
 
 typealias PreBroadcastTxHashHandler = (String) -> Unit
-
-private fun TxOuterClass.TxRaw.txHash(): String = toByteArray().sha256().toHexString()
-private fun ByteArray.toHexString(): String = Base16.encode(this).uppercase()
