@@ -1,6 +1,8 @@
 package io.provenance.client.coroutines
 
+import com.google.protobuf.Any
 import com.google.protobuf.ByteString
+import cosmos.auth.v1beta1.Auth.BaseAccount
 import cosmos.auth.v1beta1.QueryGrpcKt
 import cosmos.auth.v1beta1.QueryOuterClass
 import cosmos.base.tendermint.v1beta1.getLatestBlockRequest
@@ -82,10 +84,8 @@ open class PbCoroutinesClient(
         feePayer: String? = null,
     ): BaseReq =
         signers.map {
-            BaseReqSigner(
-                signer = it.signer,
-                sequenceOffset = it.sequenceOffset,
-                account = it.account ?: this.authClient.getBaseAccount(it.signer.address())
+            it.copy(
+                account = it.account ?: this.authClient.getBaseAccount(it.signer.address(), unpackAccount = it.unpackAccount)
             )
         }.let {
             BaseReq(
@@ -173,7 +173,7 @@ open class PbCoroutinesClient(
             .setMode(actualMode)
             .build()
         ).let { res ->
-            if (simulateBlock) {
+            if (simulateBlock && res.txResponse.code == 0) {
                 val timeoutHeight = providedTimeoutHeight.takeIf { it > 0 } ?: (latestHeight() + 10) // default to 10 block timeout for polling if no height set
                 val txHash = res.txResponse.txhash
                 do {
@@ -204,12 +204,13 @@ open class PbCoroutinesClient(
  * See [Accounts](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Accounts.kt#L18).
  *
  * @param bech32Address The bech32 address to fetch.
- * @return [cosmos.auth.v1beta1.Auth.BaseAccount] or throw [IllegalArgumentException] if the account type is not supported.
+ * @return [BaseAccount] or throw [IllegalArgumentException] if the account type is not supported.
  */
-suspend fun QueryGrpcKt.QueryCoroutineStub.getBaseAccount(bech32Address: String): cosmos.auth.v1beta1.Auth.BaseAccount =
+suspend fun QueryGrpcKt.QueryCoroutineStub.getBaseAccount(bech32Address: String, unpackAccount: (Any.() -> BaseAccount)? = null): BaseAccount =
     account(QueryOuterClass.QueryAccountRequest.newBuilder().setAddress(bech32Address).build()).account.run {
         when {
-            this.`is`(cosmos.auth.v1beta1.Auth.BaseAccount::class.java) -> unpack(cosmos.auth.v1beta1.Auth.BaseAccount::class.java)
+            unpackAccount != null -> unpackAccount()
+            this.`is`(BaseAccount::class.java) -> unpack(BaseAccount::class.java)
             else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
         }
     }
