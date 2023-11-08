@@ -12,7 +12,6 @@ import cosmos.tx.v1beta1.TxOuterClass.TxBody
 import cosmos.tx.v1beta1.getTxRequest
 import cosmos.tx.v1beta1.tx
 import io.grpc.StatusException
-import io.grpc.StatusRuntimeException
 import io.grpc.netty.NettyChannelBuilder
 import io.provenance.client.common.exceptions.TransactionTimeoutException
 import io.provenance.client.common.extensions.txHash
@@ -102,7 +101,7 @@ open class PbCoroutinesClient(
         val transaction = tx {
             body = baseReq.body
             authInfo = baseReq.buildAuthInfo()
-            signatures.add(ByteString.EMPTY)
+            signatures.addAll(baseReq.signers.map { ByteString.EMPTY })
         }
 
         val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
