@@ -14,9 +14,9 @@ import io.grpc.Metadata
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.AbstractStub
 import io.grpc.stub.MetadataUtils
-import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.common.exceptions.TransactionTimeoutException
 import io.provenance.client.common.extensions.txHash
+import io.provenance.client.common.gas.GasEstimate
 import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.client.protobuf.extensions.getTx
 import io.provenance.msgfees.v1.QueryParamsRequest
@@ -105,7 +105,8 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
         val tx = TxOuterClass.Tx.newBuilder()
             .setBody(baseReq.body)
             .setAuthInfo(baseReq.buildAuthInfo())
-            .addSignatures(ByteString.EMPTY) // signatures are not used for estimates, but a value is required
+            // signatures are not used for estimates, but a value is required for each signer
+            .addAllSignatures(baseReq.signers.map { ByteString.EMPTY })
             .build()
         val gasAdjustment = baseReq.gasAdjustment ?: GasEstimate.DEFAULT_FEE_ADJUSTMENT
 
