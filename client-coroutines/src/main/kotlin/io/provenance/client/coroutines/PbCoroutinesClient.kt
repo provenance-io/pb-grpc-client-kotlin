@@ -172,7 +172,7 @@ open class PbCoroutinesClient(
             .setMode(actualMode)
             .build()
         ).let { res ->
-            if (simulateBlock) {
+            if (simulateBlock && res.txResponse.code == 0) {
                 val timeoutHeight = providedTimeoutHeight.takeIf { it > 0 } ?: (latestHeight() + 10) // default to 10 block timeout for polling if no height set
                 val txHash = res.txResponse.txhash
                 do {
