@@ -67,6 +67,10 @@ subprojects {
     configurations.forEach { it.exclude("org.slf4j", "slf4j-api") }
     val artifactName = "pb-grpc-$name-kotlin"
 
+    tasks.withType<PublishToMavenLocal> {
+        signing.isRequired = false
+    }
+
     configure<PublishingExtension> {
         publications {
             create<MavenPublication>("maven") {

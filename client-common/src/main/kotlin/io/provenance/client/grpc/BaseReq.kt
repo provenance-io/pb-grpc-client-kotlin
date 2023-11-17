@@ -21,11 +21,16 @@ interface Signer {
     fun sign(data: ByteArray): ByteArray
 }
 
+typealias CustomUnpackAccount = (Any.() -> Auth.BaseAccount)
+typealias CustomizeSignerInfo = (SignerInfo.() -> SignerInfo)
 data class BaseReqSigner(
     val signer: Signer,
     val sequenceOffset: Int = 0,
-    val account: Auth.BaseAccount? = null
+    val account: Auth.BaseAccount? = null,
+    private val customizeSignerInfo: CustomizeSignerInfo? = null,
+    val unpackAccount: CustomUnpackAccount? = null,
 ) {
+
     fun buildSignerInfo(): SignerInfo =
         SignerInfo.newBuilder()
             .setPublicKey(Any.pack(this.signer.pubKey(), ""))
@@ -34,7 +39,12 @@ data class BaseReqSigner(
                     .setSingle(Single.newBuilder().setModeValue(SignMode.SIGN_MODE_DIRECT_VALUE))
             )
             .setSequence(this.account!!.sequence + this.sequenceOffset)
-            .build()
+            .build().let {
+                customizeSignerInfo?.invoke(it) ?: it
+            }
+
+    fun withCustomizeSignerInfo(customizeSignerInfo: CustomizeSignerInfo) = copy(customizeSignerInfo = customizeSignerInfo)
+    fun withUnpackAccount(unpackAccount: CustomUnpackAccount) = copy(unpackAccount = unpackAccount)
 }
 
 data class BaseReq(
