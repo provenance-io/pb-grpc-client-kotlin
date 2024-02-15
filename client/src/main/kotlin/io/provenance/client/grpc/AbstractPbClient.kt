@@ -51,6 +51,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
     val connectionClient = ibc.core.connection.v1.QueryGrpc.newBlockingStub(channel)
     val distributionClient = cosmos.distribution.v1beta1.QueryGrpc.newBlockingStub(channel)
     val evidenceClient = cosmos.evidence.v1beta1.QueryGrpc.newBlockingStub(channel)
+    val exchangeClient = io.provenance.exchange.v1.QueryGrpc.newBlockingStub(channel)
     val feegrantClient = cosmos.feegrant.v1beta1.QueryGrpc.newBlockingStub(channel)
     val govClient = cosmos.gov.v1beta1.QueryGrpc.newBlockingStub(channel)
     val groupClient = cosmos.group.v1.QueryGrpc.newBlockingStub(channel)
