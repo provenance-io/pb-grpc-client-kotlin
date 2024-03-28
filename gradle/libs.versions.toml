@@ -5,7 +5,7 @@ figuretech-hdwallet = "0.4.1"
 grpc = "1.55.1"
 kotlin = "1.9.10"
 kotlinx-core = "1.6.4"
-provenance-protos = "1.17.0"
+provenance-protos = "1.18.0"
 protobuf = "3.23.2"
 
 [libraries]
