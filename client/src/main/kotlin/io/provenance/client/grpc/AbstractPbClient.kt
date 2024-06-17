@@ -1,6 +1,10 @@
 package io.provenance.client.grpc
 
+import com.google.protobuf.Any
 import com.google.protobuf.ByteString
+import cosmos.auth.v1beta1.Auth.BaseAccount
+import cosmos.auth.v1beta1.QueryGrpc
+import cosmos.auth.v1beta1.QueryOuterClass
 import cosmos.base.tendermint.v1beta1.getLatestBlockRequest
 import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastMode
 import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxRequest
@@ -17,7 +21,6 @@ import io.grpc.stub.MetadataUtils
 import io.provenance.client.common.exceptions.TransactionTimeoutException
 import io.provenance.client.common.extensions.txHash
 import io.provenance.client.common.gas.GasEstimate
-import io.provenance.client.protobuf.extensions.getBaseAccount
 import io.provenance.client.protobuf.extensions.getTx
 import io.provenance.msgfees.v1.QueryParamsRequest
 import java.io.Closeable
@@ -90,7 +93,7 @@ open class AbstractPbClient<T : ManagedChannelBuilder<T>>(
             BaseReqSigner(
                 signer = it.signer,
                 sequenceOffset = it.sequenceOffset,
-                account = it.account ?: this.authClient.getBaseAccount(it.signer.address())
+                account = it.account ?: this.authClient.getBaseAccount(it.signer.address(), it.unpackAccount)
             )
         }.let {
             BaseReq(
@@ -267,5 +270,23 @@ fun <S : AbstractStub<S>> S.addBlockHeight(blockHeight: String): S {
     metadata.put(Metadata.Key.of(BLOCK_HEIGHT, Metadata.ASCII_STRING_MARSHALLER), blockHeight)
     return withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata))
 }
+
+/**
+ * Given an address, get the base account associated with it.
+ *
+ * See [Accounts](https://github.com/FigureTechnologies/service-wallet/blob/v45/pb-client/src/main/kotlin/com/figure/wallet/pbclient/client/grpc/Accounts.kt#L18).
+ *
+ * @param bech32Address The bech32 address to fetch.
+ * @param unpackAccount A custom unpacking helper for circumstances that utilize non-BaseAccount account types.
+ * @return [BaseAccount] or throw [IllegalArgumentException] if the account type is not supported.
+ */
+fun QueryGrpc.QueryBlockingStub.getBaseAccount(bech32Address: String, unpackAccount: (Any.() -> BaseAccount)? = null): BaseAccount =
+    account(QueryOuterClass.QueryAccountRequest.newBuilder().setAddress(bech32Address).build()).account.run {
+        when {
+            unpackAccount != null -> unpackAccount()
+            this.`is`(BaseAccount::class.java) -> unpack(BaseAccount::class.java)
+            else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
+        }
+    }
 
 typealias PreBroadcastTxHashHandler = (String) -> Unit
