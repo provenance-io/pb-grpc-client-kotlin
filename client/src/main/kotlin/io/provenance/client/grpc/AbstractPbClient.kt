@@ -11,6 +11,7 @@ import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxRequest
 import cosmos.tx.v1beta1.ServiceOuterClass.BroadcastTxResponse
 import cosmos.tx.v1beta1.TxOuterClass
 import cosmos.tx.v1beta1.TxOuterClass.TxRaw
+import cosmos.vesting.v1beta1.Vesting
 import io.grpc.Channel
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
@@ -285,6 +286,11 @@ fun QueryGrpc.QueryBlockingStub.getBaseAccount(bech32Address: String, unpackAcco
         when {
             unpackAccount != null -> unpackAccount()
             this.`is`(BaseAccount::class.java) -> unpack(BaseAccount::class.java)
+            this.`is`(Vesting.BaseVestingAccount::class.java) -> unpack(Vesting.BaseVestingAccount::class.java).baseAccount
+            this.`is`(Vesting.ContinuousVestingAccount::class.java) -> unpack(Vesting.ContinuousVestingAccount::class.java).baseVestingAccount.baseAccount
+            this.`is`(Vesting.DelayedVestingAccount::class.java) -> unpack(Vesting.DelayedVestingAccount::class.java).baseVestingAccount.baseAccount
+            this.`is`(Vesting.PeriodicVestingAccount::class.java) -> unpack(Vesting.PeriodicVestingAccount::class.java).baseVestingAccount.baseAccount
+            this.`is`(Vesting.PermanentLockedAccount::class.java) -> unpack(Vesting.PermanentLockedAccount::class.java).baseVestingAccount.baseAccount
             else -> throw IllegalArgumentException("Account type not handled:$typeUrl")
         }
     }
