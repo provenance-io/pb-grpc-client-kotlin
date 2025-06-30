@@ -70,5 +70,6 @@ object GasEstimationMethod {
  * @param gasPrices The current gas price supplier.
  * @return [GasEstimator]
  */
+@Deprecated(message= "Will not work with Provenance 1.25 flat fees. Use pb-grpc-client 2.6.x or higher.", replaceWith = ReplaceWith("MSG_FEE_CALCULATION"), level = DeprecationLevel.ERROR)
 fun floatingGasPrices(delegate: GasEstimator, gasPrices: GasPrices): GasEstimator =
     floatingGasPriceGasEstimator(delegate, gasPrices)
