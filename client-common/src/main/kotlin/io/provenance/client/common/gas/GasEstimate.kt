@@ -14,10 +14,11 @@ data class GasEstimate(
     val msgFees: List<CoinOuterClass.Coin> = emptyList()
 ) {
     companion object {
-        const val DEFAULT_FEE_ADJUSTMENT = 1.25
+        const val DEFAULT_FEE_ADJUSTMENT = 1.45
 
         // TODO - Remove once mainnet.version > 1.8
+        // Set to 1 for flat fees in version 1.25+
         @Deprecated("do not use")
-        const val DEFAULT_GAS_PRICE = 1905.00
+        const val DEFAULT_GAS_PRICE = 1
     }
 }

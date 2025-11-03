@@ -10,8 +10,8 @@ import io.provenance.client.common.gas.prices.GasPrices
 
 /**
  * [GasEstimator] is an alias to standardize how gas estimations are made.
- * @param tx The transaction to estimate for.
- * @param adj The gas adjustment being applied.
+ * @param cosmos.tx.v1beta1.tx The transaction to estimate for.
+ * @param adjustment The gas adjustment being applied.
  * @return Gas estimates.
  */
 typealias GasEstimator = AbstractPbClient<*>.(tx: TxOuterClass.Tx, adjustment: Double) -> GasEstimate
@@ -70,5 +70,6 @@ object GasEstimationMethod {
  * @param gasPrices The current gas price supplier.
  * @return [GasEstimator]
  */
+@Deprecated(message= "As of 2.6.x and higher pb-grpc-client defaults to Provenance 1.25 flat fees and this function ignores the GasEstimator delegate fallback.", replaceWith = ReplaceWith("MSG_FEE_CALCULATION"), level = DeprecationLevel.WARNING)
 fun floatingGasPrices(delegate: GasEstimator, gasPrices: GasPrices): GasEstimator =
     floatingGasPriceGasEstimator(delegate, gasPrices)
