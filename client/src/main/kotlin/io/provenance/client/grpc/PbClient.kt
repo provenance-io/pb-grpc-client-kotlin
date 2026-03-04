@@ -29,11 +29,48 @@ fun createChannel(uri: URI, opts: ChannelOpts, config: NettyChannelBuilder.() ->
 /**
  * Netty
  */
-open class PbClient(
+open class PbClient private constructor(
     override val chainId: String,
     override val channelUri: URI,
     override val gasEstimationMethod: GasEstimator,
-    opts: ChannelOpts = ChannelOpts(),
-    channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
-    channel: ManagedChannel = grpcChannel(channelUri, opts, NettyChannelBuilder::forAddress, channelConfigLambda),
-) : AbstractPbClient<NettyChannelBuilder>(chainId, channelUri, gasEstimationMethod, NETTY_CHANNEL, channel)
+    fromAddress: (String, Int) -> NettyChannelBuilder,
+    channel: ManagedChannel,
+) : AbstractPbClient<NettyChannelBuilder>(chainId, channelUri, gasEstimationMethod, fromAddress, channel) {
+
+    /**
+     * Primary constructor: builds a [ManagedChannel] from [NettyChannelBuilder] using the provided options.
+     * Requires `grpc-netty` (unshaded) on the classpath.
+     */
+    constructor(
+        chainId: String,
+        channelUri: URI,
+        gasEstimationMethod: GasEstimator,
+        opts: ChannelOpts = ChannelOpts(),
+        channelConfigLambda: (NettyChannelBuilder) -> Unit = { },
+        channel: ManagedChannel = grpcChannel(channelUri, opts, NettyChannelBuilder::forAddress, channelConfigLambda),
+    ) : this(
+        chainId = chainId,
+        channelUri = channelUri,
+        gasEstimationMethod = gasEstimationMethod,
+        fromAddress = NETTY_CHANNEL,
+        channel = channel,
+    )
+
+    /**
+     * Secondary constructor: accepts a pre-built [ManagedChannel] directly.
+     * Safe to use on classpaths that only have `grpc-netty-shaded` (no unshaded `grpc-netty`),
+     * because [NETTY_CHANNEL] (which references `io.grpc.netty.NettyChannelBuilder`) is never loaded.
+     */
+    constructor(
+        chainId: String,
+        channelUri: URI,
+        gasEstimationMethod: GasEstimator,
+        channel: ManagedChannel,
+    ) : this(
+        chainId = chainId,
+        channelUri = channelUri,
+        gasEstimationMethod = gasEstimationMethod,
+        fromAddress = { _, _ -> error("fromAddress is not available when PbClient is constructed with a pre-built ManagedChannel") },
+        channel = channel,
+    )
+}
