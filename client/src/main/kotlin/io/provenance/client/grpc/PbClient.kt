@@ -39,7 +39,6 @@ open class PbClient private constructor(
 
     /**
      * Primary constructor: builds a [ManagedChannel] from [NettyChannelBuilder] using the provided options.
-     * Requires `grpc-netty` (unshaded) on the classpath.
      */
     constructor(
         chainId: String,
@@ -58,8 +57,6 @@ open class PbClient private constructor(
 
     /**
      * Secondary constructor: accepts a pre-built [ManagedChannel] directly.
-     * Safe to use on classpaths that only have `grpc-netty-shaded` (no unshaded `grpc-netty`),
-     * because [NETTY_CHANNEL] (which references `io.grpc.netty.NettyChannelBuilder`) is never loaded.
      */
     constructor(
         chainId: String,
